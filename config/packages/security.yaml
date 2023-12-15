@@ -1,0 +1,21 @@
+security:
+    providers:
+        client_certificate:
+            memory:
+                users:
+                    user@phpidentitylink.com:
+                        roles: ROLE_INTERNAL
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            x509:
+                provider: client_certificate
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+#         - { path: ^/api, roles: ROLE_USER }
+         - { path: ^/internal, roles: ROLE_INTERNAL }

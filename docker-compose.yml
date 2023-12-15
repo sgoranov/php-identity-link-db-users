@@ -1,0 +1,56 @@
+version: '3.5'
+services:
+
+  php-identity-link-db-users:
+    container_name: php-identity-link-db-users
+    privileged: true
+    build:
+      context: ${PHP_IDENTITY_LINK_DB_USERS_SOURCE_DIR}
+    ports:
+      - 9001:443
+    volumes:
+      - ${PHP_IDENTITY_LINK_DB_USERS_SOURCE_DIR}:/var/www
+      - ${PHP_IDENTITY_LINK_DB_USERS_CA_CERT_PATH}:/certificates/ca.crt
+      - ${PHP_IDENTITY_LINK_DB_USERS_CA_KEY_PATH}:/certificates/ca.key
+    extra_hosts:
+      - host.docker.internal:${HOST_GW:-host-gateway}
+    depends_on:
+      - database-server
+    networks:
+      - my-network
+
+  database-server:
+    container_name: database-server
+    image: postgres:10
+    restart: always
+    ports:
+      - "9006:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    networks:
+      - my-network
+
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: database-server
+    ports:
+      - 9005:8080
+    networks:
+      - my-network
+
+  smtp-server:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - 9025:1025 # smtp server
+      - 9026:8025 # web ui
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
