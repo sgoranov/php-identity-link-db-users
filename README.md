@@ -28,10 +28,10 @@ Signe the key client by the CA
 openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out client.crt
 ```
 
-Export the client key to a PKCS12 certificate, which can be imported into the browser.
+Export the client key to a PKCS12 certificate, which can be imported into the browser for test purposes.
 
 ```bash
-openssl pkcs12 -export -inkey client.key -in client.crt -out client.p12
+openssl pkcs12 -export -inkey client.key -in client.crt -out client.p12 -passout pass:
 ```
 
 Generate server certificate (HTTPS support)

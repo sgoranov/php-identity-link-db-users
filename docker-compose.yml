@@ -10,8 +10,9 @@ services:
       - 9001:443
     volumes:
       - ${PHP_IDENTITY_LINK_DB_USERS_SOURCE_DIR}:/var/www
-      - ${PHP_IDENTITY_LINK_DB_USERS_CA_CERT_PATH}:/certificates/ca.crt
-      - ${PHP_IDENTITY_LINK_DB_USERS_CA_KEY_PATH}:/certificates/ca.key
+      - ${PHP_IDENTITY_LINK_DB_USERS_CA_CERT:-/tmp:/dummy1}
+      - ${PHP_IDENTITY_LINK_DB_USERS_CERT:-/tmp:/dummy2}
+      - ${PHP_IDENTITY_LINK_DB_USERS_CERT_KEY:-/tmp:/dummy3}
     extra_hosts:
       - host.docker.internal:${HOST_GW:-host-gateway}
     depends_on:

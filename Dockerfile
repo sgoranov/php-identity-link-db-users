@@ -33,6 +33,8 @@ RUN a2enmod rewrite
 RUN a2enmod actions
 RUN a2enmod ssl
 
+RUN mkdir /certificates
+
 COPY ./docker/apache.conf /etc/apache2/sites-enabled/000-default.conf
 
 # Manually set up the apache environment variables
@@ -46,7 +48,7 @@ COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-#CMD apachectl -D FOREGROUND
+CMD apachectl -D FOREGROUND
 
 # Used for debugging purposes only to keep the container up and running
-CMD tail -f /dev/null
+#CMD tail -f /dev/null
