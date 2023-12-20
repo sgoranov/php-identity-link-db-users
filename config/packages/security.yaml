@@ -18,4 +18,4 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
 #         - { path: ^/api, roles: ROLE_USER }
-         - { path: ^/internal, roles: ROLE_INTERNAL }
+         - { path: ^/api/private/, roles: ROLE_INTERNAL }

@@ -6,9 +6,9 @@ namespace App\Tests\Application;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
-class InternalControllerTest extends WebTestCase
+class PrivateApiTest extends WebTestCase
 {
-    public function testWithInvalidUsername(): void
+    public function testWithInvalidCredentials(): void
     {
         $client = static::createClient([], [
             'SSL_CLIENT_S_DN_Email' => 'fake@phpidentitylink.com',
@@ -19,14 +19,14 @@ class InternalControllerTest extends WebTestCase
         $router = $client->getContainer()->get(RouterInterface::class);
         $client->request(
             'GET',
-            $router->generate('internal_index')
+            $router->generate('api_private_fetch_user')
         );
 
         $response = $client->getResponse();
         $this->assertSame(401, $response->getStatusCode());
     }
 
-    public function testWithValidUsername(): void
+    public function testBadResponse(): void
     {
         $client = static::createClient([], [
             'SSL_CLIENT_S_DN_Email' => 'user@phpidentitylink.com',
@@ -37,10 +37,16 @@ class InternalControllerTest extends WebTestCase
         $router = $client->getContainer()->get(RouterInterface::class);
         $client->request(
             'GET',
-            $router->generate('internal_index')
+            $router->generate('api_private_fetch_user'),
+            ['json' => [
+                'username' => 'value1',
+                'password' => 'value2',
+            ]]
         );
 
         $response = $client->getResponse();
+        var_dump((string)$client->getRequest());exit();
+
         $this->assertSame(200, $response->getStatusCode());
     }
 }

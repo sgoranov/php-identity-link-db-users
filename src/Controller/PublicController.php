@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-class IndexController extends AbstractController
+class PublicController extends AbstractController
 {
     #[Route('/api/v1/users', name: 'api_users', methods: 'GET')]
-    public function index(): JsonResponse
+    public function index(UserRepository $userRepository): JsonResponse
     {
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/IndexController.php',
+            'response' => $userRepository->findAll(),
         ]);
     }
 }

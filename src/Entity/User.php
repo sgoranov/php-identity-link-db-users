@@ -27,14 +27,6 @@ class User
         return $this->id;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getIdentifier(): string
-    {
-        return $this->getUsername();
-    }
-
     public function getUsername(): ?string
     {
         return $this->username;

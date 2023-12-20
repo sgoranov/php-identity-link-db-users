@@ -18,7 +18,7 @@ until psql -c "\q"; do sleep 3; done
 echo "SELECT 'CREATE DATABASE idp' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'idp')\gexec" \
  | psql -v ON_ERROR_STOP=1
 
-#php bin/console -e dev doctrine:migrations:migrate
+php bin/console -e dev doctrine:migrations:migrate
 #php bin/console -e dev -n doctrine:fixtures:load
 
 # Generate client certificate used for testing
