@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Api\Private\DTO\UserRequest;
+use App\Api\DTO\UserRequest;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,34 +17,46 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PrivateController extends AbstractController
 {
+    public function __construct(
+        public readonly SerializerInterface $serializer,
+        public readonly ValidatorInterface $validator,
+    )
+    {
+    }
+
     #[Route('/api/private/v1/user', name: 'api_private_fetch_user', methods: 'GET')]
     public function getUserEntityByUserCredentials(
         Request $request,
-        ValidatorInterface $validator,
         UserRepository $repository,
-        SerializerInterface $serializer,
     ): Response
     {
-        try {
-            $dto = $serializer->deserialize($request->getContent(), UserRequest::class, 'json');
-        } catch (\Exception $e) {
-            return new JsonResponse(['response' => [$this->createError('Unable to deserialize the request')]], 400);
-        }
-
-        $errors = $validator->validate($dto);
-        if (count($errors) > 0) {
-            return new JsonResponse(['response' => $this->constraintViolationsToArray($errors)], 400);
-        }
+        $dto = $this->getDTOFromRequest($request, UserRequest::class);
 
         $user = $repository->getUser($dto->username, $dto->password);
         if ($user == null) {
-            return new JsonResponse(['response' => [$this->createError('User not found')]], 404);
+            return new JsonResponse(['response' => [$this->createError('User not found')]], Response::HTTP_BAD_REQUEST);
         }
 
         return new JsonResponse([
             'id' => $user->getId(),
             'username' => $user->getUsername(),
         ]);
+    }
+
+    private function getDTOFromRequest(Request $request, string $dtoClass): object
+    {
+        try {
+            $dto = $this->serializer->deserialize($request->getContent(), $dtoClass, 'json');
+        } catch (\Exception $e) {
+            return new JsonResponse(['response' => [$this->createError('Unable to deserialize the request')]], Response::HTTP_BAD_REQUEST);
+        }
+
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            return new JsonResponse(['response' => $this->constraintViolationsToArray($errors)], Response::HTTP_BAD_REQUEST);
+        }
+
+        return $dto;
     }
 
     private function constraintViolationsToArray(ConstraintViolationList $errors): array

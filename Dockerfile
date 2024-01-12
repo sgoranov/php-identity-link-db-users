@@ -31,9 +31,6 @@ RUN apt install symfony-cli
 # Apache configuration
 RUN a2enmod rewrite
 RUN a2enmod actions
-RUN a2enmod ssl
-
-RUN mkdir /certificates
 
 COPY ./docker/apache.conf /etc/apache2/sites-enabled/000-default.conf
 
