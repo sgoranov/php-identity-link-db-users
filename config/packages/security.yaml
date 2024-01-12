@@ -1,21 +1,24 @@
 security:
+    enable_authenticator_manager: true
+
     providers:
-        client_certificate:
-            memory:
-                users:
-                    user@phpidentitylink.com:
-                        roles: ROLE_INTERNAL
+        jwt:
+            lexik_jwt:
+                class: App\Security\User
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        main:
-            x509:
-                provider: client_certificate
+
+        internal:
+            provider: jwt
+            jwt: ~
+
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+         - { path: ^/internal/, roles: IS_AUTHENTICATED_FULLY }
 #         - { path: ^/api, roles: ROLE_USER }
-         - { path: ^/api/private/, roles: ROLE_INTERNAL }
+

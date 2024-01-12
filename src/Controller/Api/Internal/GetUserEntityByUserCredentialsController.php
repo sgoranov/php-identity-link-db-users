@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\Api\Internal;
 
 use App\Api\DTO\UserRequest;
 use App\Repository\UserRepository;
@@ -15,7 +15,7 @@ use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class PrivateController extends AbstractController
+class GetUserEntityByUserCredentialsController extends AbstractController
 {
     public function __construct(
         public readonly SerializerInterface $serializer,
@@ -24,7 +24,7 @@ class PrivateController extends AbstractController
     {
     }
 
-    #[Route('/api/private/v1/user', name: 'api_private_fetch_user', methods: 'GET')]
+    #[Route('/internal/v1/user', name: 'api_internal_get_user_entity_by_user_credentials', methods: 'GET')]
     public function getUserEntityByUserCredentials(
         Request $request,
         UserRepository $repository,
