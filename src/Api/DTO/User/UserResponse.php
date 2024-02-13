@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\DTO;
+namespace App\Api\DTO\User;
 
 class UserResponse
 {

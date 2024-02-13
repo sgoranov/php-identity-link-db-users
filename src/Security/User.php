@@ -35,7 +35,7 @@ final class User implements JWTUserInterface
         return $this->roles;
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // there is no sensitive data to remove
         // from the User object

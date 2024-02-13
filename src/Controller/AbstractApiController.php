@@ -2,14 +2,15 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints\Uuid;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AbstractApiController extends AbstractController
@@ -19,21 +20,24 @@ class AbstractApiController extends AbstractController
     public RequestStack $requestStack;
     public ServiceEntityRepository $repository;
 
-    protected function loadEntityById(&$error): ?User
+    protected function loadEntityById(&$error): ?object
     {
         $request = $this->requestStack->getCurrentRequest();
 
+        /** @var ConstraintViolationList $errors */
         $errors = $this->validator->validate($request->get('id'), new Uuid());
-        if (count($errors) !== 0) {
+        if ($errors->count() !== 0) {
             $error = 'Invalid uuid passed.';
+            return null;
         }
 
-        $user = $this->repository->getUserById($request->get('id'));
-        if ($user === null) {
+        $entity = $this->repository->find($request->get('id'));
+        if (!$entity) {
             $error = 'Not found.';
+            return null;
         }
 
-        return $user;
+        return $entity;
     }
 
     protected function mapRequestToDTO(string $dtoClassName, &$error): ?object
@@ -47,6 +51,11 @@ class AbstractApiController extends AbstractController
         } catch (ExtraAttributesException $e) {
 
             $error = $e->getMessage();
+
+        } catch (NotNormalizableValueException $e) {
+
+            $error = sprintf("The %s property must be of type %s, but %s was provided.",
+                $e->getPath(), implode('|', $e->getExpectedTypes()), $e->getCurrentType());
 
         } catch (\Exception $e) {
 

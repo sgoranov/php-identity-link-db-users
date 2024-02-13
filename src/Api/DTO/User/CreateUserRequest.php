@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Api\DTO;
+namespace App\Api\DTO\User;
 
+use App\Service\Validator\GroupId;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateUserRequest
@@ -27,6 +28,10 @@ class CreateUserRequest
     #[Assert\Length(min: 1, max: 100)]
     public string $email;
 
-    public string $groups;
-    
+    #[Assert\All(new Assert\Sequentially([
+        new Assert\Uuid(),
+        new GroupId,
+    ]))]
+    public array $groups;
+
 }

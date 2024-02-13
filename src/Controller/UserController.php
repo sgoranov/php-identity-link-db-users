@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Api\DTO\AuthUserRequest;
-use App\Api\DTO\CreateUserRequest;
 use App\Api\DTO\GetAllRequest;
-use App\Api\DTO\UpdateUserRequest;
+use App\Api\DTO\User\AuthUserRequest;
+use App\Api\DTO\User\CreateUserRequest;
+use App\Api\DTO\User\UpdateUserRequest;
 use App\Api\UserEntityMapper;
 use App\Entity\User;
 use App\Repository\UserRepository;
@@ -51,7 +51,7 @@ final class UserController extends AbstractApiController
         $response = [];
         $result = array_slice($result, 0, $dto->limit);
         foreach ($result as $user) {
-            $response[] = $mapper->mapToUserResponse($user);
+            $response[] = $mapper->mapToResponse($user);
         }
 
         return new JsonResponse([
@@ -89,12 +89,12 @@ final class UserController extends AbstractApiController
         }
 
         $user = new User();
-        $mapper->mapToUserEntity($dto, $user);
+        $mapper->mapToEntity($dto, $user);
         $entityManager->persist($user);
         $entityManager->flush();
 
         return new JsonResponse([
-            'response' => ['user' => $mapper->mapToUserResponse($user)]
+            'response' => ['user' => $mapper->mapToResponse($user)]
         ], Response::HTTP_CREATED);
     }
 
@@ -125,12 +125,12 @@ final class UserController extends AbstractApiController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $mapper->mapToUserEntity($dto, $user);
+        $mapper->mapToEntity($dto, $user);
         $entityManager->persist($user);
         $entityManager->flush();
 
         return new JsonResponse([
-            'response' => ['user' => $mapper->mapToUserResponse($user)]
+            'response' => ['user' => $mapper->mapToResponse($user)]
         ]);
     }
 
@@ -169,7 +169,7 @@ final class UserController extends AbstractApiController
         }
 
         return new JsonResponse([
-            'response' => ['user' => $mapper->mapToUserResponse($user)]
+            'response' => ['user' => $mapper->mapToResponse($user)]
         ]);
     }
 }

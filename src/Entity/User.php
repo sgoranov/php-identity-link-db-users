@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -34,7 +35,12 @@ class User
 
     #[ORM\ManyToMany(targetEntity: "Group", inversedBy: "user")]
     #[ORM\JoinTable(name: "user_group")]
-    private array $groups;
+    private Collection $groups;
+
+    public function __construct()
+    {
+        $this->groups = new ArrayCollection();
+    }
 
     public function getId(): ?string
     {
@@ -89,5 +95,15 @@ class User
     public function setEmail(string $email): void
     {
         $this->email = $email;
+    }
+
+    public function getGroups(): Collection
+    {
+        return $this->groups;
+    }
+
+    public function setGroups(Collection $groups): void
+    {
+        $this->groups = $groups;
     }
 }

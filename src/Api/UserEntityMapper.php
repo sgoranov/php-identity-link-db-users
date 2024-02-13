@@ -2,13 +2,13 @@
 
 namespace App\Api;
 
-use App\Api\DTO\UserResponse;
+use App\Api\DTO\User\UserResponse;
 use App\Entity\User;
 use App\Service\PasswordHashGenerator;
 
 class UserEntityMapper
 {
-    public function mapToUserResponse(User $user): UserResponse
+    public function mapToResponse(User $user): UserResponse
     {
         $response = new UserResponse();
         $response->id = $user->getId();
@@ -20,13 +20,15 @@ class UserEntityMapper
         return $response;
     }
 
-    public function mapToUserEntity($dto, User $user): void
+    public function mapToEntity($dto, User $user): void
     {
         $properties = [
+            'username',
             'password',
             'firstName',
             'lastName',
             'email',
+            'groups'
         ];
 
         foreach ($properties as $property) {
