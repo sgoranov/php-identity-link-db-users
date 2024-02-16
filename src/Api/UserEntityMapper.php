@@ -32,16 +32,18 @@ class UserEntityMapper
         ];
 
         foreach ($properties as $property) {
-            if ($property === 'password') {
-                $user->setPassword(PasswordHashGenerator::create($dto->password));
-            } else {
-                // skip all properties which are not initialized
-                try {
-                    $user->{'set' . ucfirst($property)}($dto->$property);
-                } catch (\Error $e) {
-                    if (!str_ends_with($e->getMessage(), 'must not be accessed before initialization')) {
-                        throw $e;
+            try {
+                if ($property === 'password') {
+                    $user->setPassword(PasswordHashGenerator::create($dto->password));
+                } else {
+                    // skip all properties which are not initialized
+                    if (property_exists($dto, $property)) {
+                        $user->{'set' . ucfirst($property)}($dto->$property);
                     }
+                }
+            } catch (\Error $e) {
+                if (!str_ends_with($e->getMessage(), 'must not be accessed before initialization')) {
+                    throw $e;
                 }
             }
         }

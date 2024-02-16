@@ -42,6 +42,15 @@ final class UserController extends AbstractApiController
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            list($error) = $errors;
+
+            return new JsonResponse([
+                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         $hasMore = false;
         $result = $repository->findBy([], null, $dto->limit + 1, $dto->offset);
         if (count($result) === $dto->limit + 1) {

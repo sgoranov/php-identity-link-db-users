@@ -9,6 +9,7 @@ class CreateUserRequest
 {
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 100)]
+    #[Assert\Regex('/^([\w0-9_-])+$/u')]
     public string $username;
 
     #[Assert\NotBlank]

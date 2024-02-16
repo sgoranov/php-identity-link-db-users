@@ -160,7 +160,7 @@ class GroupControllerTest extends WebTestCase
         $repository = $client->getContainer()->get(GroupRepository::class);
         list($group) = $repository->findBy(['name' => AppFixtures::GROUP_NAME]);
 
-        $client->request('DELETE', $router->generate('api_v1_update_group', [
+        $client->request('DELETE', $router->generate('api_v1_delete_group', [
             'id' => $group->getId()
         ]));
         $response = $client->getResponse();
