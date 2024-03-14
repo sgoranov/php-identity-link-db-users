@@ -1,3 +1,0 @@
-lexik_jwt_authentication:
-    public_key: '%kernel.project_dir%/var/jwt/public.key'
-    user_identity_field: sub

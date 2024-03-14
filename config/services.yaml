@@ -22,3 +22,11 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Security\AccessTokenHandler:
+        calls:
+            - method: setConfigurationParams
+              arguments:
+                  - '%env(JWT_JWKS_URI)%'
+                  - '%env(JWT_ISSUER)%'
+                  - '%env(JWT_GROUPS_CLAIM)%'
+                  - '%env(JWT_ROLE_ADMIN)%'
