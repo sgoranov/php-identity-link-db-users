@@ -24,23 +24,15 @@ RUN apt-get update && apt-get -y upgrade && DEBIAN_FRONTEND=noninteractive apt-g
     php-xdebug \
     composer
 
-# Install symfony cli
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
-RUN apt install symfony-cli
+ENV PGHOST database-server
+ENV PGUSER admin
+ENV PGPASSWORD admin
 
 # Apache configuration
 RUN a2enmod rewrite
 RUN a2enmod actions
 
 COPY ./docker/apache.conf /etc/apache2/sites-enabled/000-default.conf
-
-# Manually set up the apache environment variables
-ENV APACHE_RUN_USER www-data
-ENV APACHE_RUN_GROUP www-data
-ENV APACHE_LOG_DIR /var/log/apache2
-ENV APACHE_LOCK_DIR /var/lock/apache2
-ENV APACHE_PID_FILE /var/run/apache2.pid
-
 COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
