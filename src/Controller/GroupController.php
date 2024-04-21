@@ -4,63 +4,49 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Api\DTO\GetAllRequest;
-use App\Api\DTO\Group\CreateGroupRequest;
-use App\Api\DTO\Group\UpdateGroupRequest;
-use App\Api\GroupEntityMapper;
 use App\Entity\Group;
 use App\Repository\GroupRepository;
+use App\Service\Deserializer;
+use App\Service\EntityLoader;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/v1', name: 'api_v1_')]
-final class GroupController extends AbstractApiController
+final class GroupController extends AbstractController
 {
 
     public function __construct(
-        public SerializerInterface $serializer,
-        public ValidatorInterface $validator,
-        public RequestStack $requestStack,
-        GroupRepository $repository,
+        private readonly SerializerInterface $serializer,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly Deserializer $deserializer,
+        private readonly EntityLoader $entityLoader,
+        private readonly GroupRepository $repository,
     )
     {
-        $this->repository = $repository;
     }
 
     #[Route('/groups', name: 'get_all_groups', methods: 'GET')]
-    public function getAll(GroupRepository $repository, GroupEntityMapper $mapper): Response
+    public function getAll(): Response
     {
-        /** @var GetAllRequest $dto */
-        $dto = $this->mapRequestToDTO(GetAllRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $errors = $this->validator->validate($dto);
-        if (count($errors) > 0) {
-            list($error) = $errors;
-
-            return new JsonResponse([
-                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
-            ], Response::HTTP_BAD_REQUEST);
+        $request = new GetAllRequest();
+        if (!$this->deserializer->deserialize($request)) {
+            return $this->deserializer->respondWithError();
         }
 
         $hasMore = false;
-        $result = $repository->findBy([], null, $dto->limit + 1, $dto->offset);
-        if (count($result) === $dto->limit + 1) {
+        $result = $this->repository->findBy([], null, $request->getLimit() + 1, $request->getOffset());
+        if (count($result) === $request->getLimit() + 1) {
             $hasMore = true;
         }
 
         $response = [];
-        $result = array_slice($result, 0, $dto->limit);
+        $result = array_slice($result, 0, $request->getLimit());
         foreach ($result as $user) {
-            $response[] = $mapper->mapToResponse($user);
+            $response[] = json_decode($this->serializer->serialize($user, 'json'));
         }
 
         return new JsonResponse([
@@ -72,90 +58,51 @@ final class GroupController extends AbstractApiController
     }
 
     #[Route('/groups', name: 'create_group', methods: 'POST')]
-    public function create(GroupEntityMapper $mapper, EntityManagerInterface $entityManager): Response
+    public function create(): Response
     {
-        /** @var CreateGroupRequest $dto */
-        $dto = $this->mapRequestToDTO(CreateGroupRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $errors = $this->validator->validate($dto);
-        if (count($errors) > 0) {
-            list($error) = $errors;
-
-            return new JsonResponse([
-                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $result = $this->repository->findBy(['name' => $dto->name]);
-        if (count($result) !== 0) {
-            return new JsonResponse([
-                'error' => 'Invalid name. Group with the same name already exists.'
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
         $group = new Group();
-        $mapper->mapToEntity($dto, $group);
-        $entityManager->persist($group);
-        $entityManager->flush();
+        if (!$this->deserializer->deserialize($group, ['create'])) {
+            return $this->deserializer->respondWithError();
+        }
+
+        $this->entityManager->persist($group);
+        $this->entityManager->flush();
 
         return new JsonResponse([
-            'response' => ['group' => $mapper->mapToResponse($group)]
+            'response' => ['group' => json_decode($this->serializer->serialize($group, 'json'))]
         ], Response::HTTP_CREATED);
     }
 
     #[Route('/groups/{id}', name: 'update_group', methods: 'PUT')]
-    public function update(GroupEntityMapper $mapper, EntityManagerInterface $entityManager): Response
+    public function update(): Response
     {
-        /** @var UpdateGroupRequest $dto */
-        $dto = $this->mapRequestToDTO(UpdateGroupRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
+        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
+            return $this->entityLoader->respondWithError();
         }
 
-        $errors = $this->validator->validate($dto);
-        if (count($errors) > 0) {
-            list($error) = $errors;
-
-            return new JsonResponse([
-                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
-            ], Response::HTTP_BAD_REQUEST);
+        $group = $this->entityLoader->getEntity();
+        if (!$this->deserializer->deserialize($group, ['update'])) {
+            return $this->deserializer->respondWithError();
         }
 
-        $group = $this->loadEntityById($error);
-        if ($group === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $mapper->mapToEntity($dto, $group);
-        $entityManager->persist($group);
-        $entityManager->flush();
+        $this->entityManager->persist($group);
+        $this->entityManager->flush();
 
         return new JsonResponse([
-            'response' => ['group' => $mapper->mapToResponse($group)]
+            'response' => ['group' => json_decode($this->serializer->serialize($group, 'json'))]
         ]);
     }
 
     #[Route('/groups/{id}', name: 'delete_group', methods: 'DELETE')]
-    public function delete(EntityManagerInterface $entityManager): Response
+    public function delete(): Response
     {
-        $group = $this->loadEntityById($error);
-        if ($group === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
+        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
+            return $this->entityLoader->respondWithError();
         }
 
-        $entityManager->remove($group);
-        $entityManager->flush();
+        $group = $this->entityLoader->getEntity();
+        $this->entityManager->remove($group);
+        $this->entityManager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }

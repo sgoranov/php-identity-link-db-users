@@ -90,7 +90,7 @@ class UserControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Invalid username. User with the same username already exists.',
+        $this->assertSame('Invalid username. The value "test_user" already exists.',
             json_decode($response->getContent(), true)['error']);
     }
 
@@ -194,7 +194,7 @@ class UserControllerTest extends WebTestCase
             $user->setLastName('last_' . $i);
             $user->setEmail('email_' . $i . '@phpidentitylink.com');
             $user->setUsername('username_' . $i);
-            $user->setPassword('pass');
+            $user->setHashedPassword('pass');
             $entityManager->persist($user);
         }
         $entityManager->flush();

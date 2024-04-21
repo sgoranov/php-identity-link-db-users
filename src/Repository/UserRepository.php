@@ -27,14 +27,14 @@ class UserRepository extends ServiceEntityRepository
         return $this->findOneBy(['id' => $id]);
     }
 
-    public function getUser(string $username, string $password): ?User
+    public function getUserByUsernameAndPassword(string $username, string $password): ?User
     {
         $user = $this->findOneBy(['username' => $username]);
         if (is_null($user)) {
             return null;
         }
 
-        if (password_verify($password, $user->getPassword())) {
+        if (password_verify($password, $user->getHashedPassword())) {
             return $user;
         }
 

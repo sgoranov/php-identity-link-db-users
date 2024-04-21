@@ -5,62 +5,48 @@ namespace App\Controller;
 
 use App\Api\DTO\GetAllRequest;
 use App\Api\DTO\User\AuthUserRequest;
-use App\Api\DTO\User\CreateUserRequest;
-use App\Api\DTO\User\UpdateUserRequest;
-use App\Api\UserEntityMapper;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\Deserializer;
+use App\Service\EntityLoader;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/v1', name: 'api_v1_')]
-final class UserController extends AbstractApiController
+final class UserController extends AbstractController
 {
     public function __construct(
-        public SerializerInterface $serializer,
-        public ValidatorInterface $validator,
-        public RequestStack $requestStack,
-        UserRepository $repository,
+        private readonly SerializerInterface $serializer,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly Deserializer $deserializer,
+        private readonly EntityLoader $entityLoader,
+        private readonly UserRepository $repository,
     )
     {
-        $this->repository = $repository;
     }
 
     #[Route('/users', name: 'get_all_users', methods: 'GET')]
-    public function getAll(UserRepository $repository, UserEntityMapper $mapper): Response
+    public function getAll(): Response
     {
-        /** @var GetAllRequest $dto */
-        $dto = $this->mapRequestToDTO(GetAllRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $errors = $this->validator->validate($dto);
-        if (count($errors) > 0) {
-            list($error) = $errors;
-
-            return new JsonResponse([
-                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
-            ], Response::HTTP_BAD_REQUEST);
+        $request = new GetAllRequest();
+        if (!$this->deserializer->deserialize($request)) {
+            return $this->deserializer->respondWithError();
         }
 
         $hasMore = false;
-        $result = $repository->findBy([], null, $dto->limit + 1, $dto->offset);
-        if (count($result) === $dto->limit + 1) {
+        $result = $this->repository->findBy([], null, $request->getLimit() + 1, $request->getOffset());
+        if (count($result) === $request->getLimit() + 1) {
             $hasMore = true;
         }
 
         $response = [];
-        $result = array_slice($result, 0, $dto->limit);
+        $result = array_slice($result, 0, $request->getLimit());
         foreach ($result as $user) {
-            $response[] = $mapper->mapToResponse($user);
+            $response[] = json_decode($this->serializer->serialize($user, 'json'));
         }
 
         return new JsonResponse([
@@ -72,113 +58,79 @@ final class UserController extends AbstractApiController
     }
 
     #[Route('/users', name: 'create_user', methods: 'POST')]
-    public function create(UserEntityMapper $mapper, EntityManagerInterface $entityManager): Response
+    public function create(): Response
     {
-        $dto = $this->mapRequestToDTO(CreateUserRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $errors = $this->validator->validate($dto);
-        if (count($errors) > 0) {
-            list($error) = $errors;
-
-            return new JsonResponse([
-                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $result = $this->repository->findBy(['username' => $dto->username]);
-        if (count($result) !== 0) {
-            return new JsonResponse([
-                'error' => 'Invalid username. User with the same username already exists.'
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
         $user = new User();
-        $mapper->mapToEntity($dto, $user);
-        $entityManager->persist($user);
-        $entityManager->flush();
+        if (!$this->deserializer->deserialize($user, ['create'])) {
+            return $this->deserializer->respondWithError();
+        }
+
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
         return new JsonResponse([
-            'response' => ['user' => $mapper->mapToResponse($user)]
+            'response' => ['user' => json_decode($this->serializer->serialize($user, 'json'))]
         ], Response::HTTP_CREATED);
     }
 
     #[Route('/users/{id}', name: 'update_user', methods: 'PUT')]
-    public function update(UserEntityMapper $mapper, EntityManagerInterface $entityManager): Response
+    public function update(): Response
     {
-        /** @var UpdateUserRequest $dto */
-        $dto = $this->mapRequestToDTO(UpdateUserRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
+        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
+            return $this->entityLoader->respondWithError();
         }
 
-        $errors = $this->validator->validate($dto);
-        if (count($errors) > 0) {
-            list($error) = $errors;
-
-            return new JsonResponse([
-                'error' => sprintf('Invalid %s. %s', $error->getPropertyPath(), $error->getMessage())
-            ], Response::HTTP_BAD_REQUEST);
+        $user = $this->entityLoader->getEntity();
+        if (!$this->deserializer->deserialize($user, ['update'])) {
+            return $this->deserializer->respondWithError();
         }
 
-        $user = $this->loadEntityById($error);
-        if ($user === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $mapper->mapToEntity($dto, $user);
-        $entityManager->persist($user);
-        $entityManager->flush();
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
         return new JsonResponse([
-            'response' => ['user' => $mapper->mapToResponse($user)]
+            'response' => ['user' => json_decode($this->serializer->serialize($user, 'json'))]
         ]);
     }
 
     #[Route('/users/{id}', name: 'delete_user', methods: 'DELETE')]
-    public function delete(EntityManagerInterface $entityManager): Response
+    public function delete(): Response
     {
-        $user = $this->loadEntityById($error);
-        if ($user === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
+        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
+            return $this->entityLoader->respondWithError();
         }
 
-        $entityManager->remove($user);
-        $entityManager->flush();
+        $user = $this->entityLoader->getEntity();
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     #[Route('/auth', name: 'auth', methods: 'POST')]
-    public function auth(UserRepository $repository, UserEntityMapper $mapper): Response
+    public function auth(): Response
     {
-        /** @var AuthUserRequest $dto */
-        $dto = $this->mapRequestToDTO(AuthUserRequest::class, $error);
-        if ($dto === null) {
-            return new JsonResponse([
-                'error' => $error
-            ], Response::HTTP_BAD_REQUEST);
+        $authRequest = new AuthUserRequest();
+        if (!$this->deserializer->deserialize($authRequest)) {
+            return $this->deserializer->respondWithError();
         }
 
-        $user = $repository->getUser($dto->username, $dto->password);
+        $user = $this->repository->getUserByUsernameAndPassword(
+            $authRequest->getUsername(), $authRequest->getPassword());
         if ($user === null) {
             return new JsonResponse([
                 'error' => 'User not found.'
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        if (!empty($authRequest->grantType) && !in_array($authRequest->grantType, $user->getGrantTypes())) {
+            return new JsonResponse([
+                'error' => 'Invalid grant type.'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         return new JsonResponse([
-            'response' => ['user' => $mapper->mapToResponse($user)]
+            'response' => ['user' => json_decode($this->serializer->serialize($user, 'json'))]
         ]);
     }
 }

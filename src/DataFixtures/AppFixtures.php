@@ -28,9 +28,9 @@ class AppFixtures extends Fixture
 
         // User
         $user = new User();
-        $user->setPassword(PasswordHashGenerator::create(self::USER_PASSWORD));
+        $user->setHashedPassword(PasswordHashGenerator::create(self::USER_PASSWORD));
         $user->setUsername(self::USER_USERNAME);
-        $user->setGroups(new ArrayCollection([$group]));
+        $user->setGroupsCollection(new ArrayCollection([$group]));
         $user->setEmail('test_email@phpidentitylink.com');
         $user->setFirstName('First');
         $user->setLastName('Last');
