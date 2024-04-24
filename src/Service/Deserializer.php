@@ -1,7 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Service\Serializer\InvalidUuidException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -54,6 +56,10 @@ class Deserializer
             }
 
             return true;
+
+        } catch (InvalidUuidException $e) {
+
+            $this->error = sprintf('Invalid UUID %s passed.' , $e->getUuid());
 
         } catch (ExtraAttributesException $e) {
 

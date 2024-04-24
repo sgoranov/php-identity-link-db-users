@@ -7,8 +7,8 @@ use App\Api\DTO\GetAllRequest;
 use App\Entity\Group;
 use App\Repository\GroupRepository;
 use App\Service\Deserializer;
-use App\Service\EntityLoader;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +23,6 @@ final class GroupController extends AbstractController
         private readonly SerializerInterface $serializer,
         private readonly EntityManagerInterface $entityManager,
         private readonly Deserializer $deserializer,
-        private readonly EntityLoader $entityLoader,
         private readonly GroupRepository $repository,
     )
     {
@@ -74,13 +73,8 @@ final class GroupController extends AbstractController
     }
 
     #[Route('/groups/{id}', name: 'update_group', methods: 'PUT')]
-    public function update(): Response
+    public function update(#[MapEntity(id: 'id')] Group $group): Response
     {
-        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
-            return $this->entityLoader->respondWithError();
-        }
-
-        $group = $this->entityLoader->getEntity();
         if (!$this->deserializer->deserialize($group, ['update'])) {
             return $this->deserializer->respondWithError();
         }
@@ -94,13 +88,8 @@ final class GroupController extends AbstractController
     }
 
     #[Route('/groups/{id}', name: 'delete_group', methods: 'DELETE')]
-    public function delete(): Response
+    public function delete(#[MapEntity(id: 'id')] Group $group): Response
     {
-        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
-            return $this->entityLoader->respondWithError();
-        }
-
-        $group = $this->entityLoader->getEntity();
         $this->entityManager->remove($group);
         $this->entityManager->flush();
 

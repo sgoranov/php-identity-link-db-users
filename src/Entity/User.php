@@ -5,7 +5,6 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use App\Service\PasswordHashGenerator;
-use App\Service\Validator\GroupId;
 use App\Service\Validator\JsonChoice;
 use App\Service\Validator\UniqueEntry;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -61,23 +60,16 @@ class User
     #[ORM\Column(length: 100)]
     private string $email;
 
-    #[Ignore]
-    #[ORM\ManyToMany(targetEntity: "Group", inversedBy: "user")]
-    #[ORM\JoinTable(name: "user_group")]
-    private Collection $groupsCollection;
-
     #[Groups(['create', 'update'])]
-    #[Assert\All(new Assert\Sequentially([
-        new Assert\Uuid(),
-        new GroupId,
-    ], ['create', 'update']), groups: ['create', 'update'])]
     #[Assert\Count(
         min: 0,
-        max: 1,
+        max: 50,
         maxMessage: 'You cannot specify more than {{ limit }} groups',
         groups: ['create', 'update']
     )]
-    private array $groups;
+    #[ORM\ManyToMany(targetEntity: "Group", inversedBy: "user")]
+    #[ORM\JoinTable(name: "user_group")]
+    private Collection $groups;
 
     #[Groups(['create', 'update'])]
     #[JsonChoice(
@@ -89,7 +81,7 @@ class User
 
     public function __construct()
     {
-        $this->groupsCollection = new ArrayCollection();
+        $this->groups = new ArrayCollection();
     }
 
     public function getId(): ?string
@@ -147,16 +139,6 @@ class User
         $this->email = $email;
     }
 
-    public function getGroupsCollection(): Collection
-    {
-        return $this->groupsCollection;
-    }
-
-    public function setGroupsCollection(Collection $groupsCollection): void
-    {
-        $this->groupsCollection = $groupsCollection;
-    }
-
     public function getPassword(): string
     {
         return $this->password;
@@ -168,15 +150,14 @@ class User
         $this->setHashedPassword(PasswordHashGenerator::create($password));
     }
 
-    public function getGroups(): array
+    public function getGroups(): Collection
     {
         return $this->groups;
     }
 
-    public function setGroups(array $groups): void
+    public function setGroups(Collection $groups): void
     {
         $this->groups = $groups;
-        $this->setGroupsCollection(new ArrayCollection($groups));
     }
 
     public function getGrantTypes(): array

@@ -8,8 +8,8 @@ use App\Api\DTO\User\AuthUserRequest;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\Deserializer;
-use App\Service\EntityLoader;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +23,6 @@ final class UserController extends AbstractController
         private readonly SerializerInterface $serializer,
         private readonly EntityManagerInterface $entityManager,
         private readonly Deserializer $deserializer,
-        private readonly EntityLoader $entityLoader,
         private readonly UserRepository $repository,
     )
     {
@@ -74,13 +73,8 @@ final class UserController extends AbstractController
     }
 
     #[Route('/users/{id}', name: 'update_user', methods: 'PUT')]
-    public function update(): Response
+    public function update(#[MapEntity(id: 'id')] User $user): Response
     {
-        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
-            return $this->entityLoader->respondWithError();
-        }
-
-        $user = $this->entityLoader->getEntity();
         if (!$this->deserializer->deserialize($user, ['update'])) {
             return $this->deserializer->respondWithError();
         }
@@ -94,13 +88,8 @@ final class UserController extends AbstractController
     }
 
     #[Route('/users/{id}', name: 'delete_user', methods: 'DELETE')]
-    public function delete(): Response
+    public function delete(#[MapEntity(id: 'id')] User $user): Response
     {
-        if (!$this->entityLoader->loadEntityFromRequestById($this->repository)) {
-            return $this->entityLoader->respondWithError();
-        }
-
-        $user = $this->entityLoader->getEntity();
         $this->entityManager->remove($user);
         $this->entityManager->flush();
 
