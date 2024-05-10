@@ -26,7 +26,7 @@ class Group
     #[ORM\Column(length: 100)]
     private string $name;
 
-    public function getId(): string
+    public function getId(): ?string
     {
         return $this->id;
     }

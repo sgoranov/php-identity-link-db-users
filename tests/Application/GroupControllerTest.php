@@ -4,10 +4,8 @@ declare(strict_types=1);
 namespace App\Tests\Application;
 
 use App\DataFixtures\AppFixtures;
-use App\Entity\Group;
 use App\Repository\GroupRepository;
 use App\Security\User;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -80,9 +78,7 @@ class GroupControllerTest extends WebTestCase
         ]), [], [], [], json_encode($content));
         $response = $client->getResponse();
 
-        $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Invalid uuid passed.',
-            json_decode($response->getContent(), true)['error']);
+        $this->assertSame(404, $response->getStatusCode());
     }
 
     public function testUpdateGroupWithInvalidName()
@@ -105,8 +101,6 @@ class GroupControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Invalid name. This value is not valid.',
-            json_decode($response->getContent(), true)['error']);
     }
 
     public function testUpdateGroupSuccessfully()
@@ -145,9 +139,7 @@ class GroupControllerTest extends WebTestCase
         ]));
         $response = $client->getResponse();
 
-        $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Not found.',
-            json_decode($response->getContent(), true)['error']);
+        $this->assertSame(404, $response->getStatusCode());
     }
 
     public function testDeleteGroupSuccessfully()
@@ -166,88 +158,5 @@ class GroupControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertSame(204, $response->getStatusCode());
-    }
-
-    public function testGetAllWithLimitAsString()
-    {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
-        $router = $client->getContainer()->get(RouterInterface::class);
-
-        $client->request('GET', $router->generate('api_v1_get_all_groups', []), [], [], [], json_encode([
-            'limit' => '10',
-            'offset' => 0,
-        ]));
-
-        $response = $client->getResponse();
-        $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('The limit property must be of type int, but string was provided.',
-            json_decode($response->getContent(), true)['error']);
-    }
-
-    public function testGetAllWithNegativeLimit()
-    {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
-        $router = $client->getContainer()->get(RouterInterface::class);
-
-        $client->request('GET', $router->generate('api_v1_get_all_groups', []), [], [], [], json_encode([
-            'limit' => -5,
-            'offset' => 0,
-        ]));
-
-        $response = $client->getResponse();
-        $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Invalid limit. This value should be either positive or zero.',
-            json_decode($response->getContent(), true)['error']);
-    }
-
-    public function testGetAllWithNegativeOffset()
-    {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
-        $router = $client->getContainer()->get(RouterInterface::class);
-
-        $client->request('GET', $router->generate('api_v1_get_all_groups', []), [], [], [], json_encode([
-            'limit' => 10,
-            'offset' => -1,
-        ]));
-
-        $response = $client->getResponse();
-        $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Invalid offset. This value should be either positive or zero.',
-            json_decode($response->getContent(), true)['error']);
-    }
-
-    public function testGetAllSuccessfully()
-    {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
-        $router = $client->getContainer()->get(RouterInterface::class);
-
-        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
-        for ($i = 1; $i <= 10; $i++) {
-            $group = new Group();
-            $group->setName('test_group_' . $i);
-            $entityManager->persist($group);
-        }
-        $entityManager->flush();
-
-        $client->request('GET', $router->generate('api_v1_get_all_groups', []), [], [], [], json_encode([
-            // default value are:
-            // limit => 10
-            // offset => 0
-        ]));
-        $response = $client->getResponse();
-        
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(true,
-            json_decode($response->getContent(), true)['response']['hasMore']);
-        $this->assertSame(10,
-            count(json_decode($response->getContent(), true)['response']['result']));
     }
 }

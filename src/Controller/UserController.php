@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Api\DTO\GetAllRequest;
 use App\Api\DTO\User\AuthUserRequest;
 use App\Entity\User;
 use App\Repository\UserRepository;
@@ -28,35 +27,15 @@ final class UserController extends AbstractController
     {
     }
 
-    #[Route('/users', name: 'get_all_users', methods: 'GET')]
-    public function getAll(): Response
+    #[Route('/user/{id}', name: 'fetch_user', methods: 'GET')]
+    public function fetch(#[MapEntity(id: 'id')] User $user): Response
     {
-        $request = new GetAllRequest();
-        if (!$this->deserializer->deserialize($request)) {
-            return $this->deserializer->respondWithError();
-        }
-
-        $hasMore = false;
-        $result = $this->repository->findBy([], null, $request->getLimit() + 1, $request->getOffset());
-        if (count($result) === $request->getLimit() + 1) {
-            $hasMore = true;
-        }
-
-        $response = [];
-        $result = array_slice($result, 0, $request->getLimit());
-        foreach ($result as $user) {
-            $response[] = json_decode($this->serializer->serialize($user, 'json'));
-        }
-
         return new JsonResponse([
-            'response' => [
-                'result' => $response,
-                'hasMore' => $hasMore,
-            ]
+            'response' => ['user' => json_decode($this->serializer->serialize($user, 'json'))]
         ]);
     }
 
-    #[Route('/users', name: 'create_user', methods: 'POST')]
+    #[Route('/user', name: 'create_user', methods: 'POST')]
     public function create(): Response
     {
         $user = new User();
@@ -72,7 +51,7 @@ final class UserController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/users/{id}', name: 'update_user', methods: 'PUT')]
+    #[Route('/user/{id}', name: 'update_user', methods: 'PUT')]
     public function update(#[MapEntity(id: 'id')] User $user): Response
     {
         if (!$this->deserializer->deserialize($user, ['update'])) {
@@ -87,7 +66,7 @@ final class UserController extends AbstractController
         ]);
     }
 
-    #[Route('/users/{id}', name: 'delete_user', methods: 'DELETE')]
+    #[Route('/user/{id}', name: 'delete_user', methods: 'DELETE')]
     public function delete(#[MapEntity(id: 'id')] User $user): Response
     {
         $this->entityManager->remove($user);

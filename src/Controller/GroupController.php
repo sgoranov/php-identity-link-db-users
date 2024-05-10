@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Api\DTO\GetAllRequest;
 use App\Entity\Group;
-use App\Repository\GroupRepository;
 use App\Service\Deserializer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -23,40 +21,19 @@ final class GroupController extends AbstractController
         private readonly SerializerInterface $serializer,
         private readonly EntityManagerInterface $entityManager,
         private readonly Deserializer $deserializer,
-        private readonly GroupRepository $repository,
     )
     {
     }
 
-    #[Route('/groups', name: 'get_all_groups', methods: 'GET')]
-    public function getAll(): Response
+    #[Route('/group', name: 'fetch', methods: 'GET')]
+    public function getAll(#[MapEntity(id: 'id')] Group $group): Response
     {
-        $request = new GetAllRequest();
-        if (!$this->deserializer->deserialize($request)) {
-            return $this->deserializer->respondWithError();
-        }
-
-        $hasMore = false;
-        $result = $this->repository->findBy([], null, $request->getLimit() + 1, $request->getOffset());
-        if (count($result) === $request->getLimit() + 1) {
-            $hasMore = true;
-        }
-
-        $response = [];
-        $result = array_slice($result, 0, $request->getLimit());
-        foreach ($result as $user) {
-            $response[] = json_decode($this->serializer->serialize($user, 'json'));
-        }
-
         return new JsonResponse([
-            'response' => [
-                'result' => $response,
-                'hasMore' => $hasMore,
-            ]
+            'response' => ['group' => json_decode($this->serializer->serialize($group, 'json'))]
         ]);
     }
 
-    #[Route('/groups', name: 'create_group', methods: 'POST')]
+    #[Route('/group', name: 'create_group', methods: 'POST')]
     public function create(): Response
     {
         $group = new Group();
@@ -72,7 +49,7 @@ final class GroupController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/groups/{id}', name: 'update_group', methods: 'PUT')]
+    #[Route('/group/{id}', name: 'update_group', methods: 'PUT')]
     public function update(#[MapEntity(id: 'id')] Group $group): Response
     {
         if (!$this->deserializer->deserialize($group, ['update'])) {
@@ -87,7 +64,7 @@ final class GroupController extends AbstractController
         ]);
     }
 
-    #[Route('/groups/{id}', name: 'delete_group', methods: 'DELETE')]
+    #[Route('/group/{id}', name: 'delete_group', methods: 'DELETE')]
     public function delete(#[MapEntity(id: 'id')] Group $group): Response
     {
         $this->entityManager->remove($group);

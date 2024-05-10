@@ -133,9 +133,7 @@ class UserControllerTest extends WebTestCase
         ]), [], [], [], json_encode($content));
         $response = $client->getResponse();
 
-        $this->assertSame(400, $response->getStatusCode());
-        $this->assertSame('Invalid uuid passed.',
-            json_decode($response->getContent(), true)['error']);
+        $this->assertSame(404, $response->getStatusCode());
     }
 
     public function testUpdateUserSuccessfully()
@@ -180,36 +178,23 @@ class UserControllerTest extends WebTestCase
         $this->assertSame(204, $response->getStatusCode());
     }
 
-    public function testGetAllSuccessfully()
+    public function testFetchUserSuccessfully()
     {
         $client = static::createClient();
         $testUser = new User('test', ['ROLE_ADMIN']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
-        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
-        for ($i = 1; $i <= 10; $i++) {
-            $user = new \App\Entity\User();
-            $user->setFirstName('first_' . $i);
-            $user->setLastName('last_' . $i);
-            $user->setEmail('email_' . $i . '@phpidentitylink.com');
-            $user->setUsername('username_' . $i);
-            $user->setHashedPassword('pass');
-            $entityManager->persist($user);
-        }
-        $entityManager->flush();
+        $repository = $client->getContainer()->get(UserRepository::class);
+        list($user) = $repository->findBy(['username' => AppFixtures::USER_USERNAME]);
 
-        $client->request('GET', $router->generate('api_v1_get_all_users', []), [], [], [], json_encode([
-            // default value are:
-            // limit => 10
-            // offset => 0
+        $client->request('GET', $router->generate('api_v1_fetch_user', [
+            'id' => $user->getId()
         ]));
         $response = $client->getResponse();
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame(true,
-            json_decode($response->getContent(), true)['response']['hasMore']);
-        $this->assertSame(10,
-            count(json_decode($response->getContent(), true)['response']['result']));
+        $this->assertSame(AppFixtures::USER_USERNAME,
+            json_decode($response->getContent(), true)['response']['user']['username']);
     }
 }

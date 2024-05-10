@@ -30,7 +30,16 @@ class AppFixtures extends Fixture
         $user = new User();
         $user->setHashedPassword(PasswordHashGenerator::create(self::USER_PASSWORD));
         $user->setUsername(self::USER_USERNAME);
-        $user->setGroupsCollection(new ArrayCollection([$group]));
+        $user->setGroups(new ArrayCollection([$group]));
+        $user->setEmail('test_email@phpidentitylink.com');
+        $user->setFirstName('First');
+        $user->setLastName('Last');
+        $manager->persist($user);
+
+        $user = new User();
+        $user->setHashedPassword(PasswordHashGenerator::create(self::USER_PASSWORD));
+        $user->setUsername('test_user_2');
+        $user->setGroups(new ArrayCollection([$group]));
         $user->setEmail('test_email@phpidentitylink.com');
         $user->setFirstName('First');
         $user->setLastName('Last');
