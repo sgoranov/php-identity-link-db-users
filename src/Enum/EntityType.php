@@ -14,6 +14,12 @@ enum EntityType: string
     public function entity(): string {
         return EntityType::getEntity($this);
     }
+
+    public static function fromString(string $value): self
+    {
+        return self::from($value);
+    }
+
     public static function getEntity(self $value): string {
         return match ($value) {
             EntityType::USER => User::class,

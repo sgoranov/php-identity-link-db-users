@@ -5,7 +5,7 @@ namespace App\Tests\Application;
 
 use App\DataFixtures\AppFixtures;
 use App\Repository\GroupRepository;
-use App\Security\User;
+use sgoranov\PHPIdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 

@@ -76,6 +76,9 @@
             "tests/bootstrap.php"
         ]
     },
+    "sgoranov/php-identity-link-shared": {
+        "version": "dev-develop"
+    },
     "symfony/console": {
         "version": "6.3",
         "recipe": {

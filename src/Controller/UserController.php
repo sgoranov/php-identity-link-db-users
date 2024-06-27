@@ -6,13 +6,14 @@ namespace App\Controller;
 use App\Api\DTO\User\AuthUserRequest;
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Service\Deserializer;
+use sgoranov\PHPIdentityLinkShared\Serializer\Deserializer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/v1', name: 'api_v1_')]
@@ -46,8 +47,12 @@ final class UserController extends AbstractController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        $context = (new ObjectNormalizerContextBuilder())
+            ->withGroups('response_without_password')
+            ->toArray();
+
         return new JsonResponse([
-            'response' => ['user' => json_decode($this->serializer->serialize($user, 'json'))]
+            'response' => ['user' => json_decode($this->serializer->serialize($user, 'json', $context))]
         ], Response::HTTP_CREATED);
     }
 

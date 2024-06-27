@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Application;
 
 use App\DataFixtures\AppFixtures;
-use App\Security\User;
+use sgoranov\PHPIdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 

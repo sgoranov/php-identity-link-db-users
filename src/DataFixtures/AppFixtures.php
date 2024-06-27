@@ -5,7 +5,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Group;
 use App\Entity\User;
-use App\Service\PasswordHashGenerator;
+use sgoranov\PHPIdentityLinkShared\Security\PasswordHashGenerator;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;

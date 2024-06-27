@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Group;
-use App\Service\Deserializer;
+use sgoranov\PHPIdentityLinkShared\Serializer\Deserializer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,8 +25,8 @@ final class GroupController extends AbstractController
     {
     }
 
-    #[Route('/group', name: 'fetch', methods: 'GET')]
-    public function getAll(#[MapEntity(id: 'id')] Group $group): Response
+    #[Route('/group/{id}', name: 'fetch_group', methods: 'GET')]
+    public function fetch(#[MapEntity(id: 'id')] Group $group): Response
     {
         return new JsonResponse([
             'response' => ['group' => json_decode($this->serializer->serialize($group, 'json'))]

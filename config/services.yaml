@@ -11,6 +11,25 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
+    # Makes sgoranov\PHPIdentityLinkShared services available
+    sgoranov\PHPIdentityLinkShared\:
+        resource: '../vendor/sgoranov/php-identity-link-shared/src/*'
+
+    sgoranov\PHPIdentityLinkShared\Security\AccessTokenHandler:
+        calls:
+            - method: setConfigurationParams
+              arguments:
+                  - '%env(JWT_JWKS_URI)%'
+                  - '%env(JWT_ISSUER)%'
+                  - '%env(JWT_GROUPS_CLAIM)%'
+                  - '%env(JWT_ROLE_ADMIN)%'
+
+    sgoranov\PHPIdentityLinkShared\Api\DTO\AbstractQueryRequest:
+        alias: App\Api\DTO\Query\QueryRequest
+
+    sgoranov\PHPIdentityLinkShared\Api\DoctrineEntityType:
+        alias: App\Enum\EntityType
+
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:

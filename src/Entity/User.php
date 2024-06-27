@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use App\Service\PasswordHashGenerator;
-use App\Service\Validator\JsonChoice;
-use App\Service\Validator\UniqueEntry;
+use sgoranov\PHPIdentityLinkShared\Security\PasswordHashGenerator;
+use sgoranov\PHPIdentityLinkShared\Validator\JsonChoice;
+use sgoranov\PHPIdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -24,7 +24,7 @@ class User
     #[ORM\CustomIdGenerator(class: "doctrine.uuid_generator")]
     private ?string $id = null;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[UniqueEntry(groups: ['create', 'update'])]
     #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
@@ -41,26 +41,26 @@ class User
     #[Assert\Length(min: 1, max: 50, groups: ['create', 'update'])]
     private string $password;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
     #[ORM\Column(length: 100)]
     private string $firstName;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
     #[ORM\Column(length: 100)]
     private string $lastName;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Email(groups: ['create', 'update'])]
     #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
     #[ORM\Column(length: 100)]
     private string $email;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'response_without_password'])]
     #[Assert\Count(
         min: 0,
         max: 50,
@@ -71,7 +71,7 @@ class User
     #[ORM\JoinTable(name: "user_group")]
     private Collection $groups;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'response_without_password'])]
     #[JsonChoice(
         choices: ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit'],
         groups: ['create', 'update']
