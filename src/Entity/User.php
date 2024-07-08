@@ -79,6 +79,10 @@ class User
     #[ORM\Column(type: 'json')]
     private array $grantTypes = [];
 
+    #[Groups(['create', 'update', 'response_without_password'])]
+    #[ORM\Column]
+    private bool $isTwoFaEnabled = false;
+
     public function __construct()
     {
         $this->groups = new ArrayCollection();
@@ -168,5 +172,15 @@ class User
     public function setGrantTypes(array $grantTypes): void
     {
         $this->grantTypes = $grantTypes;
+    }
+
+    public function isTwoFaEnabled(): bool
+    {
+        return $this->isTwoFaEnabled;
+    }
+
+    public function setIsTwoFaEnabled(bool $isTwoFaEnabled): void
+    {
+        $this->isTwoFaEnabled = $isTwoFaEnabled;
     }
 }
