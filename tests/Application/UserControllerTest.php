@@ -106,6 +106,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test@phpidentitylink.com',
             'username' => 'test',
             'password' => 'test',
+            'isTwoFaEnabled' => true,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -114,6 +115,8 @@ class UserControllerTest extends WebTestCase
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame('test',
             json_decode($response->getContent(), true)['response']['user']['username']);
+        $this->assertSame(true,
+            json_decode($response->getContent(), true)['response']['user']['isTwoFaEnabled']);
     }
 
     public function testUpdateUserWithInvalidUuid()

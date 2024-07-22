@@ -3,9 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\GroupRepository;
+use Doctrine\Common\Collections\Collection;
 use sgoranov\PHPIdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
@@ -25,6 +27,10 @@ class Group
     #[Assert\Regex(pattern: '/^([\.\w0-9_ :-])+$/u', groups: ['create', 'update'])]
     #[ORM\Column(length: 100)]
     private string $name;
+
+    #[Ignore]
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: "groups")]
+    private Collection $users;
 
     public function getId(): ?string
     {

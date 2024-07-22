@@ -67,7 +67,7 @@ class User
         maxMessage: 'You cannot specify more than {{ limit }} groups',
         groups: ['create', 'update']
     )]
-    #[ORM\ManyToMany(targetEntity: "Group", inversedBy: "user")]
+    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: "users")]
     #[ORM\JoinTable(name: "user_group")]
     private Collection $groups;
 
