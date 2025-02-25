@@ -39,3 +39,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    sgoranov\PHPIdentityLinkShared\EventListener\RequestResponseLogger:
+        arguments:
+            $logger: '@monolog.logger.rest'
