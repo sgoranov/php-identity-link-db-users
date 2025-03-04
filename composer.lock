@@ -2039,12 +2039,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sgoranov/php-identity-link-shared.git",
-                "reference": "bc70f3f7155bbb441a69a24d14cf7f3769c127f3"
+                "reference": "827cc62ce2cb0aec89a6f4e69fdf6a0ffa065fea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sgoranov/php-identity-link-shared/zipball/bc70f3f7155bbb441a69a24d14cf7f3769c127f3",
-                "reference": "bc70f3f7155bbb441a69a24d14cf7f3769c127f3",
+                "url": "https://api.github.com/repos/sgoranov/php-identity-link-shared/zipball/827cc62ce2cb0aec89a6f4e69fdf6a0ffa065fea",
+                "reference": "827cc62ce2cb0aec89a6f4e69fdf6a0ffa065fea",
                 "shasum": ""
             },
             "require": {

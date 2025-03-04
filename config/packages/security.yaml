@@ -5,7 +5,7 @@ security:
             security: false
 
         main:
-            pattern: ^/api
+            pattern: ^/(api|openid)
             stateless: true
             access_token:
                 token_handler: sgoranov\PHPIdentityLinkShared\Security\AccessTokenHandler
@@ -15,6 +15,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
          - { path: ^/api/v1/ping, roles: PUBLIC_ACCESS }
+         - { path: ^/openid/user-info, roles: IS_AUTHENTICATED_FULLY }
          - { path: ^/api/v1/auth, roles: IS_AUTHENTICATED_FULLY }
          - { path: ^/api, roles: ROLE_ADMIN }
 
