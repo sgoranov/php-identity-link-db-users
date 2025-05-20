@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use sgoranov\PHPIdentityLinkShared\Security\PasswordHashGenerator;
-use sgoranov\PHPIdentityLinkShared\Validator\JsonChoice;
-use sgoranov\PHPIdentityLinkShared\Validator\UniqueEntry;
+use sgoranov\IdentityLinkShared\Security\PasswordHashGenerator;
+use sgoranov\IdentityLinkShared\Validator\JsonChoice;
+use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
