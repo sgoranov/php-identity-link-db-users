@@ -7,12 +7,12 @@ composer install --no-scripts
 
 # Database setup
 until psql -c "\q"; do sleep 3; done
-echo "SELECT 'CREATE DATABASE \"php-identity-link-db-users\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\"php-identity-link-db-users\"')\gexec" \
+echo "SELECT 'CREATE DATABASE \"identity-link-db-users\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\"identity-link-db-users\"')\gexec" \
  | psql -v ON_ERROR_STOP=1
 php bin/console -e dev doctrine:migrations:migrate --no-interaction
 
 # PHPUnit setup
-echo "SELECT 'CREATE DATABASE \"php-identity-link-db-users-test\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\"php-identity-link-db-users-test\"')\gexec" \
+echo "SELECT 'CREATE DATABASE \"test-identity-link-db-users\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\"test-identity-link-db-users\"')\gexec" \
  | psql -v ON_ERROR_STOP=1
 php bin/console -e test doctrine:migrations:migrate --no-interaction
 php bin/console -e test -n doctrine:fixtures:load
