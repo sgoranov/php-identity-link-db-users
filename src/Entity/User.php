@@ -6,6 +6,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use sgoranov\IdentityLinkShared\Security\PasswordHashGenerator;
 use sgoranov\IdentityLinkShared\Validator\JsonChoice;
+use sgoranov\IdentityLinkShared\Validator\PasswordStrength;
 use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -16,6 +17,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\Index(columns: ['reset_token'], name: 'idx_user_reset_token')]
 class User
 {
     #[ORM\Id]
@@ -29,7 +31,7 @@ class User
     #[UniqueEntry(groups: ['create', 'update'])]
     #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
     #[Assert\Regex(pattern: '/^([\w0-9_-])+$/u', groups: ['create', 'update'])]
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, unique: true)]
     private string $username;
 
     #[Ignore]
@@ -39,6 +41,7 @@ class User
     #[Groups(['create', 'update'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Length(min: 1, max: 50, groups: ['create', 'update'])]
+    #[PasswordStrength(groups: ['create', 'update'])]
     private string $password;
 
     #[Groups(['create', 'update', 'response_without_password'])]
@@ -57,7 +60,8 @@ class User
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Email(groups: ['create', 'update'])]
     #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
-    #[ORM\Column(length: 100)]
+    #[UniqueEntry(groups: ['create', 'update'])]
+    #[ORM\Column(length: 100, unique: true)]
     private string $email;
 
     #[Groups(['create', 'update', 'response_without_password'])]
@@ -78,6 +82,14 @@ class User
     )]
     #[ORM\Column(type: 'json')]
     private array $grantTypes = [];
+
+    #[Ignore]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $resetToken = null;
+
+    #[Ignore]
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $resetTokenExpiresAt = null;
 
     public function __construct()
     {
@@ -168,5 +180,25 @@ class User
     public function setGrantTypes(array $grantTypes): void
     {
         $this->grantTypes = $grantTypes;
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->resetToken;
+    }
+
+    public function setResetToken(?string $resetToken): void
+    {
+        $this->resetToken = $resetToken;
+    }
+
+    public function getResetTokenExpiresAt(): ?\DateTimeInterface
+    {
+        return $this->resetTokenExpiresAt;
+    }
+
+    public function setResetTokenExpiresAt(?\DateTimeInterface $resetTokenExpiresAt): void
+    {
+        $this->resetTokenExpiresAt = $resetTokenExpiresAt;
     }
 }

@@ -93,6 +93,52 @@ class UserControllerTest extends WebTestCase
             json_decode($response->getContent(), true)['error']);
     }
 
+    public function testCreateUserWithExistingEmail(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test_email1@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame('Invalid email. The value "test_email1@phpidentitylink.com" already exists.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
+    public function testCreateUserWithWeakPassword(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => 'weak',
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame('Invalid password. The password is too weak. Add another word or two. Uncommon words are better.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
     public function testCreateUserSuccessfully(): void
     {
         $client = static::createClient();
@@ -105,7 +151,7 @@ class UserControllerTest extends WebTestCase
             'lastName' => 'Last',
             'email' => 'test@phpidentitylink.com',
             'username' => 'test',
-            'password' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));

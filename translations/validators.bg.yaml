@@ -1,0 +1,3 @@
+form_reset_password:
+  passwords_do_not_match: Паролите не съвпадат.
+  password_too_weak: Паролата ви е твърде слаба. Моля, изберете по-силна.

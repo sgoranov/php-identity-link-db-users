@@ -1,0 +1,6 @@
+framework:
+  rate_limiter:
+    reset_password_ip:
+      policy: 'fixed_window'
+      limit: 5
+      interval: '1 hour'

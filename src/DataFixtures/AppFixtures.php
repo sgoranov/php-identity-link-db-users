@@ -17,6 +17,7 @@ class AppFixtures extends Fixture
 {
     const GROUP_NAME = 'test_group';
     const USER_USERNAME = 'test_user';
+    const USER_EMAIL = 'test_email1@phpidentitylink.com';
     const USER_PASSWORD = 'f1080c74-ace7-44e8-8512-d2917d6dcde6';
 
     public function load(ObjectManager $manager): void
@@ -31,7 +32,7 @@ class AppFixtures extends Fixture
         $user->setHashedPassword(PasswordHashGenerator::create(self::USER_PASSWORD));
         $user->setUsername(self::USER_USERNAME);
         $user->setGroups(new ArrayCollection([$group]));
-        $user->setEmail('test_email@phpidentitylink.com');
+        $user->setEmail(self::USER_EMAIL);
         $user->setFirstName('First');
         $user->setLastName('Last');
         $manager->persist($user);
@@ -40,7 +41,7 @@ class AppFixtures extends Fixture
         $user->setHashedPassword(PasswordHashGenerator::create(self::USER_PASSWORD));
         $user->setUsername('test_user_2');
         $user->setGroups(new ArrayCollection([$group]));
-        $user->setEmail('test_email@phpidentitylink.com');
+        $user->setEmail('test_email2@phpidentitylink.com');
         $user->setFirstName('First');
         $user->setLastName('Last');
         $manager->persist($user);

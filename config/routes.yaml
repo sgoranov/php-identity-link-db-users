@@ -13,3 +13,8 @@ api_v1_query:
     path: /api/v1/query
     methods: POST
     controller: sgoranov\IdentityLinkShared\Controller\QueryController::query
+
+switch_locale:
+    methods: [ GET ]
+    path: /switch-locale/{locale}
+    controller: sgoranov\IdentityLinkShared\Controller\LocaleController::switchLocale

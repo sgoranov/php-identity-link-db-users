@@ -1,0 +1,3 @@
+form_reset_password:
+  passwords_do_not_match: The passwords do not match.
+  password_too_weak: Your password is too weak. Please choose a stronger one.

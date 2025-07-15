@@ -1,0 +1,4 @@
+framework:
+  rate_limiter:
+    reset_password_ip:
+      policy: 'no_limit'

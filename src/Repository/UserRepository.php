@@ -40,4 +40,15 @@ class UserRepository extends ServiceEntityRepository
 
         return null;
     }
+
+    public function countUsersWithResetPasswordToken(): int
+    {
+        return $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.resetToken IS NOT NULL')
+            ->andWhere('u.resetTokenExpiresAt > :now')
+            ->setParameter('now', new \DateTime())
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
