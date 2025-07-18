@@ -1,0 +1,4 @@
+framework:
+  rate_limiter:
+    reset_password_ip:
+      cache_pool: rate_limiter_redis
