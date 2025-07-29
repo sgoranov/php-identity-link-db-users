@@ -4,17 +4,17 @@ controllers:
         namespace: App\Controller
     type: attribute
 
+openapi_yaml:
+    path: /api/v1/openapi.yaml
+    methods: GET
+    controller: sgoranov\IdentityLinkShared\Controller\OpenApiController::openapi
+
 api_v1_ping:
     path: /api/v1/ping
     methods: GET
     controller: sgoranov\IdentityLinkShared\Controller\PingController::ping
 
-api_v1_query:
-    path: /api/v1/query
-    methods: POST
-    controller: sgoranov\IdentityLinkShared\Controller\QueryController::query
-
 switch_locale:
-    methods: [ GET ]
+    methods: GET
     path: /switch-locale/{locale}
     controller: sgoranov\IdentityLinkShared\Controller\LocaleController::switchLocale

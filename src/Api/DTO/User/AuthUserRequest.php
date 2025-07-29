@@ -4,7 +4,37 @@ declare(strict_types=1);
 namespace App\Api\DTO\User;
 
 use Symfony\Component\Validator\Constraints as Assert;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'AuthUserRequest',
+    required: ['username', 'password'],
+    properties: [
+        new OA\Property(
+            property: 'username',
+            description: 'Username for authentication',
+            type: 'string',
+            maxLength: 200,
+            example: 'john_doe'
+        ),
+        new OA\Property(
+            property: 'password',
+            description: 'Password for authentication',
+            type: 'string',
+            maxLength: 200,
+            example: 'myS3cretPass'
+        ),
+        new OA\Property(
+            property: 'grantType',
+            description: 'OAuth2 grant type',
+            type: 'string',
+            enum: ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit'],
+            example: 'password',
+            nullable: true
+        )
+    ],
+    type: 'object'
+)]
 class AuthUserRequest
 {
     #[Assert\NotBlank]

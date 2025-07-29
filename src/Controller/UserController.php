@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 use Symfony\Component\Serializer\SerializerInterface;
+use OpenApi\Attributes as OA;
 
 #[Route('/api/v1', name: 'api_v1_')]
 final class UserController extends AbstractController
@@ -29,6 +30,44 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}', name: 'fetch_user', methods: 'GET')]
+    #[OA\Get(
+        path: '/api/v1/user/{id}',
+        summary: 'Fetch a user by ID',
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'UUID of the user',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                )
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User fetched successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(
+                                    property: 'user',
+                                    ref: '#/components/schemas/User'
+                                )
+                            ],
+                            type: 'object'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'User not found')
+        ]
+    )]
     public function fetch(#[MapEntity(id: 'id')] User $user): Response
     {
         return new JsonResponse([
@@ -37,6 +76,36 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user', name: 'create_user', methods: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/user',
+        summary: 'Create a new user',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/User')
+        ),
+        tags: ['User'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User created successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(
+                                    property: 'user',
+                                    ref: '#/components/schemas/User'
+                                )
+                            ],
+                            type: 'object'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'User not found')
+        ]
+    )]
     public function create(): Response
     {
         $user = new User();
@@ -57,6 +126,48 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}', name: 'update_user', methods: 'PUT')]
+    #[OA\Put(
+        path: '/api/v1/user/{id}',
+        summary: 'Update an existing user',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/User')
+        ),
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'UUID of the user',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                )
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User updated successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(
+                                    property: 'user',
+                                    ref: '#/components/schemas/User'
+                                )
+                            ],
+                            type: 'object'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'User not found')
+        ]
+    )]
     public function update(#[MapEntity(id: 'id')] User $user): Response
     {
         if (!$this->deserializer->deserialize($user, ['update'])) {
@@ -72,6 +183,27 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}', name: 'delete_user', methods: 'DELETE')]
+    #[OA\Delete(
+        path: '/api/v1/user/{id}',
+        summary: 'Delete a user',
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'UUID of the user',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                )
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'User deleted'),
+            new OA\Response(response: 404, description: 'User not found')
+        ]
+    )]
     public function delete(#[MapEntity(id: 'id')] User $user): Response
     {
         $this->entityManager->remove($user);
@@ -81,6 +213,23 @@ final class UserController extends AbstractController
     }
 
     #[Route('/auth', name: 'auth', methods: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/auth',
+        summary: 'Authenticate user',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AuthUserRequest')
+        ),
+        tags: ['User'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Authentication successful',
+                content: new OA\JsonContent(ref: '#/components/schemas/User')
+            ),
+            new OA\Response(response: 400, description: 'Invalid credentials')
+        ]
+    )]
     public function auth(): Response
     {
         $authRequest = new AuthUserRequest();

@@ -11,6 +11,7 @@ use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use OpenApi\Attributes as OA;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -18,6 +19,70 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\Index(columns: ['reset_token'], name: 'idx_user_reset_token')]
+#[OA\Schema(
+    schema: 'User',
+    properties: [
+        new OA\Property(
+            property: 'id',
+            description: 'User UUID',
+            type: 'string',
+            format: 'uuid',
+            example: '550e8400-e29b-41d4-a716-446655440000'
+        ),
+        new OA\Property(
+            property: 'username',
+            description: 'Unique username',
+            type: 'string',
+            example: 'john_doe'
+        ),
+        new OA\Property(
+            property: 'password',
+            description: 'User password',
+            type: 'string',
+            example: 'superSecret123'
+        ),
+        new OA\Property(
+            property: 'firstName',
+            description: 'User first name',
+            type: 'string',
+            example: 'John'
+        ),
+        new OA\Property(
+            property: 'lastName',
+            description: 'User last name',
+            type: 'string',
+            example: 'Doe'
+        ),
+        new OA\Property(
+            property: 'email',
+            description: 'User email address',
+            type: 'string',
+            format: 'email',
+            example: 'john.doe@example.com'
+        ),
+        new OA\Property(
+            property: 'groups',
+            description: 'User groups (array of UUIDs)',
+            type: 'array',
+            items: new OA\Items(
+                type: 'string',
+                format: 'uuid',
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            )
+        ),
+        new OA\Property(
+            property: 'grantTypes',
+            description: 'Allowed OAuth2 grant types',
+            type: 'array',
+            items: new OA\Items(
+                type: 'string',
+                enum: ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit'],
+                example: 'password'
+            )
+        )
+    ],
+    type: 'object'
+)]
 class User
 {
     #[ORM\Id]

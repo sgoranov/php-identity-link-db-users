@@ -6,12 +6,36 @@ use App\Repository\GroupRepository;
 use Doctrine\Common\Collections\Collection;
 use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\ORM\Mapping as ORM;
+use OpenApi\Attributes as OA;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
 #[ORM\Table(name: '`group`')]
+#[OA\Schema(
+    schema: 'Group',
+    title: 'Group',
+    description: 'Group entity schema used for both input and output',
+    required: ['name'],
+    properties: [
+        new OA\Property(
+            property: 'id',
+            description: 'UUID of the group',
+            type: 'string',
+            format: 'uuid',
+            example: 'f1e2d3c4-b5a6-7890-1234-abcdef987654'
+        ),
+        new OA\Property(
+            property: 'name',
+            description: 'Name of the group',
+            type: 'string',
+            maxLength: 100,
+            example: 'managers'
+        )
+    ],
+    type: 'object'
+)]
 class Group
 {
     #[ORM\Id]

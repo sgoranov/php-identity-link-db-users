@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Repository\GroupRepository;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\ConversionException;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,34 @@ class UserInfoController extends AbstractController
     }
 
     #[Route('/openid/user-info', name: 'openid_user_info', methods: ['GET'])]
+    #[OA\Get(
+        path: '/openid/user-info',
+        description: 'Returns standard OpenID user info claims for the authenticated user.',
+        summary: 'Fetch info about the authenticated user',
+        tags: ['User Info'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User info returned successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'preferred_username', type: 'string'),
+                        new OA\Property(property: 'sub', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'name', type: 'string'),
+                        new OA\Property(property: 'email', type: 'string', format: 'email'),
+                        new OA\Property(
+                            property: 'groups',
+                            type: 'array',
+                            items: new OA\Items(type: 'string')
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 400, description: 'Missing or empty subject (sub) claim'),
+            new OA\Response(response: 401, description: 'Invalid or expired access token')
+        ]
+    )]
     public function index(Request $request): Response
     {
         $id = $this->getUser()->getUserIdentifier();
