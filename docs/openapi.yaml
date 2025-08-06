@@ -265,30 +265,6 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           description: 'Invalid credentials'
-  /openid/user-info:
-    get:
-      tags:
-        - 'User Info'
-      summary: 'Fetch info about the authenticated user'
-      description: 'Returns standard OpenID user info claims for the authenticated user.'
-      operationId: ec3d7f5be7f1d0b526fa6a01245a7f2f
-      responses:
-        '200':
-          description: 'User info returned successfully'
-          content:
-            application/json:
-              schema:
-                properties:
-                  preferred_username: { type: string }
-                  sub: { type: string, format: uuid }
-                  name: { type: string }
-                  email: { type: string, format: email }
-                  groups: { type: array, items: { type: string } }
-                type: object
-        '400':
-          description: 'Missing or empty subject (sub) claim'
-        '401':
-          description: 'Invalid or expired access token'
 components:
   schemas:
     QueryRequest:
@@ -452,9 +428,6 @@ tags:
   -
     name: User
     description: User
-  -
-    name: 'User Info'
-    description: 'User Info'
   -
     name: Health
     description: Health
