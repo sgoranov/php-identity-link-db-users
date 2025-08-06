@@ -14,6 +14,11 @@ api_v1_ping:
     methods: GET
     controller: sgoranov\IdentityLinkShared\Controller\PingController::ping
 
+api_v1_query:
+    path: /api/v1/query
+    methods: POST
+    controller: sgoranov\IdentityLinkShared\Controller\QueryController::query
+
 switch_locale:
     methods: GET
     path: /switch-locale/{locale}
