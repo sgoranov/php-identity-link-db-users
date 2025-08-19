@@ -3,13 +3,17 @@ app:
 
 reset_password_request:
   title: Reset your password
+  instructions: Enter your email address and we will send you a link to reset your password.
+  submit: Send reset link
   check_email_message: If your email exists in our system, you will receive a link to reset your password.
   too_many_requests: Too many reset password requests. Please try again later.
+  back_to_login: Back to login
 
 reset_password:
   title: Reset your password
   invalid_token: Invalid or expired reset token.
   success: Password reset successful. You can now log in.
+  success_with_login: Password successfully changed. You can now %tagOpen%log in here%tagClose%.
 
 reset_password_email:
   subject: Your password reset request

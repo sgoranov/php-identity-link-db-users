@@ -11,8 +11,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -27,7 +27,7 @@ class ResetPasswordController extends AbstractController
 {
     private string $fromAddress;
     private string $fromName;
-    private string $resetPasswordRedirectUrl;
+    private string $redirectUrl;
 
     public function __construct(
         private readonly UserRepository $userRepository,
@@ -43,11 +43,11 @@ class ResetPasswordController extends AbstractController
 
         $this->fromAddress = $params->get('mailer_from_address');
         $this->fromName = $params->get('mailer_from_name');
-        $this->resetPasswordRedirectUrl = $params->get('reset_password_redirect_url');
+        $this->redirectUrl = $params->get('reset_password_redirect_url');
     }
 
-    #[Route('/reset-password', name: 'forgot_password_request', methods: ['GET', 'POST'])]
-    public function request(Request $request, MailerInterface $mailer, RateLimiterFactory $resetPasswordIpLimiter): Response
+    #[Route('/reset-password/{loginId}', name: 'forgot_password_request', methods: ['GET', 'POST'])]
+    public function request(string $loginId, Request $request, MailerInterface $mailer, RateLimiterFactory $resetPasswordIpLimiter): Response
     {
         $form = $this->createForm(ResetPasswordRequestFormType::class);
         $form->handleRequest($request);
@@ -57,11 +57,11 @@ class ResetPasswordController extends AbstractController
             $limiter = $resetPasswordIpLimiter->create($request->getClientIp());
             $limit = $limiter->consume();
             if (!$limit->isAccepted()) {
-                $this->addFlash('error', 'reset_password_request.too_many_requests');
-                return $this->redirectToRoute('forgot_password_request');
+                $this->addFlash('error', $this->translator->trans('reset_password_request.too_many_requests'));
+                return $this->redirectToRoute('forgot_password_request', ['loginId' => $loginId]);
             }
 
-            $email = $form->get('email')->getData();
+            $email = trim($form->get('email')->getData());
             $user = $this->userRepository->findOneBy(['email' => $email]);
 
             if ($user) {
@@ -76,11 +76,13 @@ class ResetPasswordController extends AbstractController
                 $emailMessage = (new TemplatedEmail())
                     ->from(new Address($this->fromAddress, $this->fromName))
                     ->to($user->getEmail())
-                    ->subject($this->translator->trans('reset_password_email.subject'))
+                    ->subject($this->translator->trans('reset_password.email.subject', [], 'messages'))
                     ->htmlTemplate('emails/reset_password.html.twig')
                     ->context([
-                        'resetUrl' => $this->generateUrl('reset_password',
-                            ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL
+                        'resetUrl' => $this->generateUrl(
+                            'reset_password',
+                            ['token' => $token, 'loginId' => $loginId],
+                            UrlGeneratorInterface::ABSOLUTE_URL
                         ),
                     ]);
 
@@ -95,26 +97,29 @@ class ResetPasswordController extends AbstractController
                 }
             }
 
-            $this->addFlash('success', 'reset_password_request.check_email_message');
-            return $this->redirectToRoute('forgot_password_request');
+            $this->addFlash('success', $this->translator->trans('reset_password_request.check_email_message'));
+            return $this->redirectToRoute('forgot_password_request', ['loginId' => $loginId]);
         }
 
         return $this->render('reset_password/request.html.twig', [
             'form' => $form->createView(),
+            'redirectUrl' => $this->getRedirectUrl($loginId),
         ]);
     }
 
-    #[Route('/reset-password/{token}', name: 'reset_password', methods: ['GET', 'POST'])]
-    public function reset(string $token, Request $request): Response
+    #[Route('/reset-password/{token}/{loginId}', name: 'reset_password', methods: ['GET', 'POST'])]
+    public function reset(string $token, string $loginId, Request $request): Response
     {
         $user = $this->userRepository->findOneBy(['resetToken' => $token]);
 
         if (!$user || $user->getResetTokenExpiresAt() < new \DateTime()) {
-            $this->addFlash('danger', 'reset_password.invalid_token');
+            $this->addFlash('danger', $this->translator->trans('reset_password.invalid_token'));
             return $this->redirectToRoute('forgot_password_request');
         }
 
-        $form = $this->createForm(ResetPasswordFormType::class);
+        $form = $this->createForm(ResetPasswordFormType::class, null, [
+            'action' => $request->getUri(),
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -124,17 +129,24 @@ class ResetPasswordController extends AbstractController
 
             $this->entityManager->flush();
 
-            $this->addFlash('success', 'reset_password.success');
+            $this->addFlash('success',
+                $this->translator->trans('reset_password.success_with_login',
+                    [
+                        '%tagOpen%' => '<a href="' . $this->getRedirectUrl($loginId) . '">',
+                        '%tagClose%' => '</a>'
+                    ])
+            );
 
-            if (!empty($this->resetPasswordRedirectUrl)) {
-                return $this->redirect($this->resetPasswordRedirectUrl);
-            }
-
-            return $this->redirectToRoute('forgot_password_request');
+            return $this->redirectToRoute('forgot_password_request', ['loginId' => $loginId]);
         }
 
         return $this->render('reset_password/reset.html.twig', [
             'form' => $form->createView(),
         ]);
+    }
+
+    private function getRedirectUrl(string $loginId): string
+    {
+        return str_replace('{id}', $loginId ?? '', $this->redirectUrl);
     }
 }

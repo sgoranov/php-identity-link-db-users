@@ -1,6 +1,37 @@
 {% extends 'base.html.twig' %}
 
 {% block content %}
-    <h1>{{ 'reset_password.title'|trans }}</h1>
-    {{ form(form) }}
+    <div class="container mx-auto max-w-md p-4 bg-white rounded-lg shadow-md text-center">
+
+        <h1 class="text-xl sm:text-2xl font-bold mb-4 break-words">
+            {{ 'reset_password.title'|trans }}
+        </h1>
+
+        {# Flash messages #}
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} mb-4 text-sm sm:text-base">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="mb-6 text-left">
+            {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+            {{ form_row(form.plainPassword.first, {
+                'attr': {
+                    'class': 'w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500'
+                }
+            }) }}
+
+            {{ form_row(form.plainPassword.second, {
+                'attr': {
+                    'class': 'w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500'
+                }
+            }) }}
+
+            {{ form_end(form) }}
+        </div>
+    </div>
 {% endblock %}

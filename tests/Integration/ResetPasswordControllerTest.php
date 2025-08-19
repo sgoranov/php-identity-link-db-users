@@ -18,7 +18,7 @@ class ResetPasswordControllerTest extends WebTestCase
         $repository = $client->getContainer()->get(UserRepository::class);
         $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
 
-        $crawler = $client->request('GET', $router->generate('forgot_password_request'));
+        $crawler = $client->request('GET', $router->generate('forgot_password_request', ['loginId' => 'uuid']));
         $form = $crawler->filter('form')->form([
             'reset_password_request_form[email]' => 'nonexistent@example.com',
         ]);
@@ -29,11 +29,11 @@ class ResetPasswordControllerTest extends WebTestCase
 
         $this->assertResponseRedirects();
         $targetUrl = $response->headers->get('Location');
-        $expectedUrl = $router->generate('forgot_password_request');
+        $expectedUrl = $router->generate('forgot_password_request', ['loginId' => 'uuid']);
         $this->assertSame($expectedUrl, $targetUrl);
 
         $client->followRedirect();
-        $this->assertSelectorTextContains('div.alert.alert-success', 'If your email exists in our system, you will receive a link to reset your password.');
+        $this->assertSelectorTextContains('div.alert.alert-info', 'If your email exists in our system, you will receive a link to reset your password.');
 
         $entityManager->clear();
         $this->assertEquals(0, $repository->countUsersWithResetPasswordToken());
@@ -46,7 +46,7 @@ class ResetPasswordControllerTest extends WebTestCase
         $repository = $client->getContainer()->get(UserRepository::class);
         $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
 
-        $crawler = $client->request('GET', $router->generate('forgot_password_request'));
+        $crawler = $client->request('GET', $router->generate('forgot_password_request', ['loginId' => 'uuid']));
         $form = $crawler->filter('form')->form([
             'reset_password_request_form[email]' => AppFixtures::USER_EMAIL,
         ]);
@@ -57,11 +57,11 @@ class ResetPasswordControllerTest extends WebTestCase
 
         $this->assertResponseRedirects();
         $targetUrl = $response->headers->get('Location');
-        $expectedUrl = $router->generate('forgot_password_request');
+        $expectedUrl = $router->generate('forgot_password_request', ['loginId' => 'uuid']);
         $this->assertSame($expectedUrl, $targetUrl);
 
         $client->followRedirect();
-        $this->assertSelectorTextContains('div.alert.alert-success', 'If your email exists in our system, you will receive a link to reset your password.');
+        $this->assertSelectorTextContains('div.alert.alert-info', 'If your email exists in our system, you will receive a link to reset your password.');
 
         $entityManager->clear();
         $this->assertEquals(1, $repository->countUsersWithResetPasswordToken());
