@@ -5,6 +5,7 @@ namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
@@ -160,6 +161,29 @@ class UserControllerTest extends WebTestCase
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame('test',
             json_decode($response->getContent(), true)['response']['user']['username']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['user']['isSystem']);
+    }
+
+    public function testCreateUserRejectsIsSystemThroughApi(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'System',
+            'lastName' => 'User',
+            'email' => 'system_user@phpidentitylink.com',
+            'username' => 'system_user',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'isSystem' => true,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
     }
 
     public function testUpdateUserWithInvalidUuid()
@@ -203,6 +227,56 @@ class UserControllerTest extends WebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('FirstNew',
             json_decode($response->getContent(), true)['response']['user']['firstName']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['user']['isSystem']);
+    }
+
+    public function testUpdateUserRejectsIsSystemThroughApi()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'FirstNew',
+            'isSystem' => true,
+        ];
+
+        $repository = $client->getContainer()->get(UserRepository::class);
+        list($user) = $repository->findBy(['username' => AppFixtures::USER_USERNAME]);
+
+        $client->request('PUT', $router->generate('api_v1_update_user', [
+            'id' => $user->getId()
+        ]), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+    }
+
+    public function testUpdateSystemUserIsForbidden()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(UserRepository::class);
+        list($user) = $repository->findBy(['username' => AppFixtures::USER_USERNAME]);
+
+        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE "user" SET is_system = true WHERE id = :id',
+            ['id' => $user->getId()]
+        );
+        $entityManager->clear();
+
+        $client->request('PUT', $router->generate('api_v1_update_user', [
+            'id' => $user->getId()
+        ]), [], [], [], json_encode(['firstName' => 'FirstNew']));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System users cannot be updated.', json_decode($response->getContent(), true)['error']);
     }
 
     public function testDeleteUserSuccessfully()
@@ -223,6 +297,32 @@ class UserControllerTest extends WebTestCase
         $this->assertSame(204, $response->getStatusCode());
     }
 
+    public function testDeleteSystemUserIsForbidden()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(UserRepository::class);
+        list($user) = $repository->findBy(['username' => AppFixtures::USER_USERNAME]);
+
+        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE "user" SET is_system = true WHERE id = :id',
+            ['id' => $user->getId()]
+        );
+        $entityManager->clear();
+
+        $client->request('DELETE', $router->generate('api_v1_delete_user', [
+            'id' => $user->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System users cannot be deleted.', json_decode($response->getContent(), true)['error']);
+    }
+
     public function testFetchUserSuccessfully()
     {
         $client = static::createClient();
@@ -241,5 +341,32 @@ class UserControllerTest extends WebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame(AppFixtures::USER_USERNAME,
             json_decode($response->getContent(), true)['response']['user']['username']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['user']['isSystem']);
+    }
+
+    public function testFetchSystemUserExposesIsSystem()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(UserRepository::class);
+        list($user) = $repository->findBy(['username' => AppFixtures::USER_USERNAME]);
+
+        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE "user" SET is_system = true WHERE id = :id',
+            ['id' => $user->getId()]
+        );
+        $entityManager->clear();
+
+        $client->request('GET', $router->generate('api_v1_fetch_user', [
+            'id' => $user->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue(json_decode($response->getContent(), true)['response']['user']['isSystem']);
     }
 }

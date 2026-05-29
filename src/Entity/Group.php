@@ -32,6 +32,12 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: 'string',
             maxLength: 100,
             example: 'managers'
+        ),
+        new OA\Property(
+            property: 'isSystem',
+            description: 'Whether this group is protected from API update and deletion',
+            type: 'boolean',
+            example: false
         )
     ],
     type: 'object'
@@ -52,6 +58,9 @@ class Group
     #[ORM\Column(length: 100)]
     private string $name;
 
+    #[ORM\Column(name: 'is_system', type: 'boolean', options: ['default' => false])]
+    private bool $isSystem = false;
+
     #[Ignore]
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: "groups")]
     private Collection $users;
@@ -69,5 +78,10 @@ class Group
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    public function getIsSystem(): bool
+    {
+        return $this->isSystem;
     }
 }

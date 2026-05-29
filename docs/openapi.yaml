@@ -101,6 +101,8 @@ paths:
                 type: object
         '400':
           description: 'Invalid input'
+        '403':
+          description: 'System groups cannot be updated'
         '404':
           description: 'Group not found'
     delete:
@@ -120,6 +122,8 @@ paths:
       responses:
         '204':
           description: 'Group deleted successfully'
+        '403':
+          description: 'System groups cannot be deleted'
         '404':
           description: 'Group not found'
   /api/v1/group:
@@ -200,6 +204,8 @@ paths:
                 properties:
                   response: { properties: { user: { $ref: '#/components/schemas/User' } }, type: object }
                 type: object
+        '403':
+          description: 'System users cannot be updated'
         '404':
           description: 'User not found'
     delete:
@@ -219,6 +225,8 @@ paths:
       responses:
         '204':
           description: 'User deleted'
+        '403':
+          description: 'System users cannot be deleted'
         '404':
           description: 'User not found'
   /api/v1/user:
@@ -363,6 +371,10 @@ components:
           type: string
           maxLength: 100
           example: managers
+        isSystem:
+          description: 'Whether this group is protected from API update and deletion'
+          type: boolean
+          example: false
       type: object
     User:
       properties:
@@ -411,6 +423,10 @@ components:
               - refresh_token
               - implicit
             example: password
+        isSystem:
+          description: 'Whether this user is protected from API update and deletion'
+          type: boolean
+          example: false
       type: object
   securitySchemes:
     bearerAuth:

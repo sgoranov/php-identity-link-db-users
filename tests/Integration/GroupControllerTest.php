@@ -5,6 +5,7 @@ namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
 use App\Repository\GroupRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
@@ -60,6 +61,25 @@ class GroupControllerTest extends WebTestCase
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame('administrator',
             json_decode($response->getContent(), true)['response']['group']['name']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['group']['isSystem']);
+    }
+
+    public function testCreateGroupRejectsIsSystemThroughApi(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'system_group',
+            'isSystem' => true,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_group'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
     }
 
     public function testUpdateGroupWithInvalidUuid()
@@ -125,6 +145,56 @@ class GroupControllerTest extends WebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('test_new',
             json_decode($response->getContent(), true)['response']['group']['name']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['group']['isSystem']);
+    }
+
+    public function testUpdateGroupRejectsIsSystemThroughApi()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_new',
+            'isSystem' => true,
+        ];
+
+        $repository = $client->getContainer()->get(GroupRepository::class);
+        list($group) = $repository->findBy(['name' => AppFixtures::GROUP_NAME]);
+
+        $client->request('PUT', $router->generate('api_v1_update_group', [
+            'id' => $group->getId()
+        ]), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+    }
+
+    public function testUpdateSystemGroupIsForbidden()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(GroupRepository::class);
+        list($group) = $repository->findBy(['name' => AppFixtures::GROUP_NAME]);
+
+        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE "group" SET is_system = true WHERE id = :id',
+            ['id' => $group->getId()]
+        );
+        $entityManager->clear();
+
+        $client->request('PUT', $router->generate('api_v1_update_group', [
+            'id' => $group->getId()
+        ]), [], [], [], json_encode(['name' => 'test_new']));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System groups cannot be updated.', json_decode($response->getContent(), true)['error']);
     }
 
     public function testDeleteGroupWithMissingUuid()
@@ -158,5 +228,57 @@ class GroupControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertSame(204, $response->getStatusCode());
+    }
+
+    public function testDeleteSystemGroupIsForbidden()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(GroupRepository::class);
+        list($group) = $repository->findBy(['name' => AppFixtures::GROUP_NAME]);
+
+        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE "group" SET is_system = true WHERE id = :id',
+            ['id' => $group->getId()]
+        );
+        $entityManager->clear();
+
+        $client->request('DELETE', $router->generate('api_v1_delete_group', [
+            'id' => $group->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System groups cannot be deleted.', json_decode($response->getContent(), true)['error']);
+    }
+
+    public function testFetchSystemGroupExposesIsSystem()
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(GroupRepository::class);
+        list($group) = $repository->findBy(['name' => AppFixtures::GROUP_NAME]);
+
+        $entityManager = $client->getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE "group" SET is_system = true WHERE id = :id',
+            ['id' => $group->getId()]
+        );
+        $entityManager->clear();
+
+        $client->request('GET', $router->generate('api_v1_fetch_group', [
+            'id' => $group->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue(json_decode($response->getContent(), true)['response']['group']['isSystem']);
     }
 }

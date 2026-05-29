@@ -153,11 +153,18 @@ final class GroupController extends AbstractController
                 )
             ),
             new OA\Response(response: 400, description: 'Invalid input'),
+            new OA\Response(response: 403, description: 'System groups cannot be updated'),
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
     public function update(#[MapEntity(id: 'id')] Group $group): Response
     {
+        if ($group->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System groups cannot be updated.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         if (!$this->deserializer->deserialize($group, ['update'])) {
             return $this->deserializer->respondWithError();
         }
@@ -186,11 +193,18 @@ final class GroupController extends AbstractController
         ],
         responses: [
             new OA\Response(response: 204, description: 'Group deleted successfully'),
+            new OA\Response(response: 403, description: 'System groups cannot be deleted'),
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
     public function delete(#[MapEntity(id: 'id')] Group $group): Response
     {
+        if ($group->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System groups cannot be deleted.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $this->entityManager->remove($group);
         $this->entityManager->flush();
 

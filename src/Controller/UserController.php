@@ -165,11 +165,18 @@ final class UserController extends AbstractController
                     ]
                 )
             ),
+            new OA\Response(response: 403, description: 'System users cannot be updated'),
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
     public function update(#[MapEntity(id: 'id')] User $user): Response
     {
+        if ($user->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System users cannot be updated.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         if (!$this->deserializer->deserialize($user, ['update'])) {
             return $this->deserializer->respondWithError();
         }
@@ -201,11 +208,18 @@ final class UserController extends AbstractController
         ],
         responses: [
             new OA\Response(response: 204, description: 'User deleted'),
+            new OA\Response(response: 403, description: 'System users cannot be deleted'),
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
     public function delete(#[MapEntity(id: 'id')] User $user): Response
     {
+        if ($user->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System users cannot be deleted.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $this->entityManager->remove($user);
         $this->entityManager->flush();
 

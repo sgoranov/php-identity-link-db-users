@@ -79,6 +79,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
                 enum: ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit'],
                 example: 'password'
             )
+        ),
+        new OA\Property(
+            property: 'isSystem',
+            description: 'Whether this user is protected from API update and deletion',
+            type: 'boolean',
+            example: false
         )
     ],
     type: 'object'
@@ -147,6 +153,10 @@ class User
     )]
     #[ORM\Column(type: 'json')]
     private array $grantTypes = [];
+
+    #[Groups(['response_without_password'])]
+    #[ORM\Column(name: 'is_system', type: 'boolean', options: ['default' => false])]
+    private bool $isSystem = false;
 
     #[Ignore]
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -245,6 +255,11 @@ class User
     public function setGrantTypes(array $grantTypes): void
     {
         $this->grantTypes = $grantTypes;
+    }
+
+    public function getIsSystem(): bool
+    {
+        return $this->isSystem;
     }
 
     public function getResetToken(): ?string
