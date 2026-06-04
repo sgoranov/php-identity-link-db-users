@@ -38,6 +38,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test@phpidentitylink.com',
             'username' => '',
             'password' => 'test',
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -61,6 +62,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test@phpidentitylink.com',
             'username' => 'test$',
             'password' => 'test',
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -84,6 +86,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test@phpidentitylink.com',
             'username' => 'test_user',
             'password' => 'test',
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -107,6 +110,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test_email1@phpidentitylink.com',
             'username' => 'test',
             'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -130,6 +134,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test@phpidentitylink.com',
             'username' => 'test',
             'password' => 'weak',
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -139,6 +144,206 @@ class UserControllerTest extends WebTestCase
         $this->assertSame('Invalid password. The password is too weak. Add another word or two. Uncommon words are better.',
             json_decode($response->getContent(), true)['error']);
     }
+
+    public function testCreateUserWithMissingTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame('Invalid twoFaEnabled. This value should not be null.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
+    public function testCreateUserWithInvalidTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => 'invalid',
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame('The twoFaEnabled property must be of type bool, but string was provided.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
+    public function testCreateUserWithTwoFaEnabledTrue(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => true,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(201, $response->getStatusCode());
+    }
+
+    public function testCreateUserWithNullTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => null,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame(
+            'The twoFaEnabled property must be of type bool, but null was provided.',
+            json_decode($response->getContent(), true)['error']
+        );
+    }
+
+    public function testCreateUserWithEmptyStringTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => '',
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame(
+            'The twoFaEnabled property must be of type bool, but string was provided.',
+            json_decode($response->getContent(), true)['error']
+        );
+    }
+
+    public function testCreateUserWithNumericTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => 1,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame(
+            'The twoFaEnabled property must be of type bool, but int was provided.',
+            json_decode($response->getContent(), true)['error']
+        );
+    }
+
+    public function testCreateUserWithArrayTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => [],
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame(
+            'The twoFaEnabled property must be of type bool, but array was provided.',
+            json_decode($response->getContent(), true)['error']
+        );
+    }
+
+    public function testCreateUserWithObjectTwoFaEnabled(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'firstName' => 'First',
+            'lastName' => 'Last',
+            'email' => 'test@phpidentitylink.com',
+            'username' => 'test',
+            'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => ['foo' => 'bar'],
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame(
+            'The twoFaEnabled property must be of type bool, but array was provided.',
+            json_decode($response->getContent(), true)['error']
+        );
+    }
+
 
     public function testCreateUserSuccessfully(): void
     {
@@ -153,6 +358,7 @@ class UserControllerTest extends WebTestCase
             'email' => 'test@phpidentitylink.com',
             'username' => 'test',
             'password' => '41816d28-b579-45db-9267-887ad39781d3',
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));
@@ -178,6 +384,7 @@ class UserControllerTest extends WebTestCase
             'username' => 'system_user',
             'password' => '41816d28-b579-45db-9267-887ad39781d3',
             'isSystem' => true,
+            'twoFaEnabled' => false,
         ];
 
         $client->request('POST', $router->generate('api_v1_create_user'), [], [], [], json_encode($content));

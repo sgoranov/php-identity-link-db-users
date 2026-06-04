@@ -427,6 +427,10 @@ components:
           description: 'Whether this user is protected from API update and deletion'
           type: boolean
           example: false
+        twoFaEnabled:
+          description: 'Indicates whether two-factor authentication is enabled for this user'
+          type: boolean
+          example: false
       type: object
   securitySchemes:
     bearerAuth:
@@ -450,3 +454,4 @@ tags:
   -
     name: Query
     description: Query
+

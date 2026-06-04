@@ -35,6 +35,7 @@ class AppFixtures extends Fixture
         $user->setEmail(self::USER_EMAIL);
         $user->setFirstName('First');
         $user->setLastName('Last');
+        $user->setTwoFaEnabled(false);
         $manager->persist($user);
 
         $user = new User();
@@ -44,6 +45,7 @@ class AppFixtures extends Fixture
         $user->setEmail('test_email2@phpidentitylink.com');
         $user->setFirstName('First');
         $user->setLastName('Last');
+        $user->setTwoFaEnabled(false);
         $manager->persist($user);
 
         $manager->flush();

@@ -85,6 +85,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
             description: 'Whether this user is protected from API update and deletion',
             type: 'boolean',
             example: false
+        ),
+        new OA\Property(
+            property: 'twoFaEnabled',
+            description: 'Indicates whether two-factor authentication is enabled for this user',
+            type: 'boolean',
+            example: false
         )
     ],
     type: 'object'
@@ -157,6 +163,12 @@ class User
     #[Groups(['response_without_password'])]
     #[ORM\Column(name: 'is_system', type: 'boolean', options: ['default' => false])]
     private bool $isSystem = false;
+
+    #[Groups(['create', 'update', 'response_without_password'])]
+    #[Assert\NotNull(groups: ['create'])]
+    #[Assert\Type(type: 'bool', groups: ['create', 'update'])]
+    #[ORM\Column(name: 'two_fa_enabled', type: 'boolean')]
+    private bool $twoFaEnabled;
 
     #[Ignore]
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -260,6 +272,16 @@ class User
     public function getIsSystem(): bool
     {
         return $this->isSystem;
+    }
+
+    public function isTwoFaEnabled(): bool
+    {
+        return $this->twoFaEnabled;
+    }
+
+    public function setTwoFaEnabled(bool $twoFaEnabled): void
+    {
+        $this->twoFaEnabled = $twoFaEnabled;
     }
 
     public function getResetToken(): ?string
