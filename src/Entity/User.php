@@ -115,29 +115,29 @@ class User
     #[ORM\Column(name: 'password', length: 100)]
     private string $hashedPassword;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create', 'update', 'profile_update'])]
     #[Assert\NotBlank(groups: ['create'])]
-    #[Assert\Length(min: 1, max: 50, groups: ['create', 'update'])]
-    #[PasswordStrength(groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 50, groups: ['create', 'update', 'profile_update'])]
+    #[PasswordStrength(groups: ['create', 'update', 'profile_update'])]
     private string $password;
 
-    #[Groups(['create', 'update', 'response_without_password'])]
+    #[Groups(['create', 'update', 'profile_update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
-    #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 100, groups: ['create', 'update', 'profile_update'])]
     #[ORM\Column(length: 100)]
     private string $firstName;
 
-    #[Groups(['create', 'update', 'response_without_password'])]
+    #[Groups(['create', 'update', 'profile_update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
-    #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 100, groups: ['create', 'update', 'profile_update'])]
     #[ORM\Column(length: 100)]
     private string $lastName;
 
-    #[Groups(['create', 'update', 'response_without_password'])]
+    #[Groups(['create', 'update', 'profile_update', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
-    #[Assert\Email(groups: ['create', 'update'])]
-    #[Assert\Length(min: 1, max: 100, groups: ['create', 'update'])]
-    #[UniqueEntry(groups: ['create', 'update'])]
+    #[Assert\Email(groups: ['create', 'update', 'profile_update'])]
+    #[Assert\Length(min: 1, max: 100, groups: ['create', 'update', 'profile_update'])]
+    #[UniqueEntry(groups: ['create', 'update', 'profile_update'])]
     #[ORM\Column(length: 100, unique: true)]
     private string $email;
 
@@ -164,9 +164,9 @@ class User
     #[ORM\Column(name: 'is_system', type: 'boolean', options: ['default' => false])]
     private bool $isSystem = false;
 
-    #[Groups(['create', 'update', 'response_without_password'])]
+    #[Groups(['create', 'update', 'profile_update', 'response_without_password'])]
     #[Assert\NotNull(groups: ['create'])]
-    #[Assert\Type(type: 'bool', groups: ['create', 'update'])]
+    #[Assert\Type(type: 'bool', groups: ['create', 'update', 'profile_update'])]
     #[ORM\Column(name: 'two_fa_enabled', type: 'boolean')]
     private bool $twoFaEnabled;
 
