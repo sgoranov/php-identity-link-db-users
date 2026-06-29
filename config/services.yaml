@@ -4,6 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    fallback_app_secret: '%env(APP_SECRET)%'
+    fallback_db_user: '%env(DB_USER)%'
+    fallback_db_password: '%env(DB_PASSWORD)%'
     feature_reset_password_enabled: '%env(bool:FEATURE_RESET_PASSWORD_ENABLED)%'
     mailer_from_address: '%env(string:MAILER_FROM_ADDRESS)%'
     mailer_from_name: '%env(string:MAILER_FROM_NAME)%'
