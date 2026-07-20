@@ -76,8 +76,9 @@ class ResetPasswordController extends AbstractController
                 $emailMessage = (new TemplatedEmail())
                     ->from(new Address($this->fromAddress, $this->fromName))
                     ->to($user->getEmail())
-                    ->subject($this->translator->trans('reset_password.email.subject', [], 'messages'))
+                    ->subject($this->translator->trans('reset_password_email.subject', [], 'messages'))
                     ->htmlTemplate('emails/reset_password.html.twig')
+                    ->textTemplate('emails/reset_password.txt.twig')
                     ->context([
                         'resetUrl' => $this->generateUrl(
                             'reset_password',
@@ -114,7 +115,7 @@ class ResetPasswordController extends AbstractController
 
         if (!$user || $user->getResetTokenExpiresAt() < new \DateTime()) {
             $this->addFlash('danger', $this->translator->trans('reset_password.invalid_token'));
-            return $this->redirectToRoute('forgot_password_request');
+            return $this->redirectToRoute('forgot_password_request', ['loginId' => $loginId]);
         }
 
         $form = $this->createForm(ResetPasswordFormType::class, null, [
