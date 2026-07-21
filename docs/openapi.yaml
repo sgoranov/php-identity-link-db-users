@@ -149,6 +149,33 @@ paths:
                 type: object
         '400':
           description: 'Invalid input'
+  /api/v1/profile:
+    put:
+      tags:
+        - Profile
+      summary: 'Update current user profile'
+      operationId: 15d81a2d0d19afa4c71e8b7027ebadf7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: 'Profile updated successfully'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { user: { $ref: '#/components/schemas/User' } }, type: object }
+                type: object
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Authentication required'
+        '404':
+          description: 'Current user not found'
   '/api/v1/user/{id}':
     get:
       tags:
@@ -445,6 +472,9 @@ tags:
   -
     name: Group
     description: Group
+  -
+    name: Profile
+    description: Profile
   -
     name: User
     description: User
