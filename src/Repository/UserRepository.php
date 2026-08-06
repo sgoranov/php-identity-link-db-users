@@ -51,4 +51,29 @@ class UserRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Returns the distinct scopes granted to a user through their current groups.
+     *
+     * @return list<string>
+     */
+    public function getScopes(User $user, string $audience): array
+    {
+        return $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            <<<'SQL'
+                SELECT DISTINCT gs.scope
+                FROM group_scope gs
+                INNER JOIN user_group ug ON ug.group_id = gs.group_id
+                WHERE ug.user_id = :userId
+                  AND gs.audience_hash = :audienceHash
+                  AND gs.audience = :audience
+                ORDER BY gs.scope
+                SQL,
+            [
+                'userId' => $user->getId(),
+                'audienceHash' => hash('sha256', $audience),
+                'audience' => $audience,
+            ]
+        );
+    }
 }

@@ -11,10 +11,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Attributes as OA;
 
 #[Route('/api/v1', name: 'api_v1_')]
@@ -25,8 +28,78 @@ final class UserController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly Deserializer $deserializer,
         private readonly UserRepository $repository,
+        private readonly ValidatorInterface $validator,
     )
     {
+    }
+
+    #[Route('/user/{id}/scope', name: 'get_user_scopes', methods: 'GET')]
+    #[OA\Get(
+        path: '/api/v1/user/{id}/scope',
+        summary: 'Fetch scopes granted to a user for an audience',
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'UUID of the user',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+            new OA\Parameter(
+                name: 'audience',
+                description: 'Protected-resource audience',
+                in: 'query',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uri', maxLength: 3000)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Scopes fetched successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(
+                                    property: 'scopes',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string')
+                                )
+                            ],
+                            type: 'object'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Invalid audience'),
+            new OA\Response(response: 404, description: 'User not found')
+        ]
+    )]
+    public function getScopes(
+        #[MapEntity(id: 'id')] User $user,
+        Request $request,
+    ): Response {
+        $audience = $request->query->getString('audience');
+        $violations = $this->validator->validate($audience, [
+            new Assert\NotBlank(),
+            new Assert\Url(protocols: ['https']),
+            new Assert\Length(min: 1, max: 3000),
+        ]);
+
+        if (count($violations) > 0) {
+            return new JsonResponse([
+                'error' => 'Invalid audience. ' . $violations[0]->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse([
+            'response' => [
+                'scopes' => $this->repository->getScopes($user, $audience),
+            ],
+        ]);
     }
 
     #[Route('/user/{id}', name: 'fetch_user', methods: 'GET')]
