@@ -19,7 +19,7 @@ class ProfileControllerTest extends WebTestCase
         $router = $client->getContainer()->get(RouterInterface::class);
         $repository = $client->getContainer()->get(UserRepository::class);
         $updatedUser = $repository->findOneBy(['username' => AppFixtures::USER_USERNAME]);
-        $client->loginUser(new User($updatedUser->getId(), ['ROLE_USER']));
+        $client->loginUser(new User($updatedUser->getId(), ['users.self.update']));
 
         $content = [
             'firstName' => 'ProfileFirstNew',
@@ -45,7 +45,7 @@ class ProfileControllerTest extends WebTestCase
         $router = $client->getContainer()->get(RouterInterface::class);
         $repository = $client->getContainer()->get(UserRepository::class);
         $currentUser = $repository->findOneBy(['username' => AppFixtures::USER_USERNAME]);
-        $client->loginUser(new User($currentUser->getId(), ['ROLE_USER']));
+        $client->loginUser(new User($currentUser->getId(), ['users.self.update']));
 
         $content = [
             'firstName' => 'CurrentOnly',
@@ -73,7 +73,7 @@ class ProfileControllerTest extends WebTestCase
         $repository = $client->getContainer()->get(UserRepository::class);
 
         $currentUser = $repository->findOneBy(['username' => AppFixtures::USER_USERNAME]);
-        $client->loginUser(new User($currentUser->getId(), ['ROLE_USER']));
+        $client->loginUser(new User($currentUser->getId(), ['users.self.update']));
 
         $client->request('PUT', $router->generate('api_v1_update_profile'), [], [], [], json_encode($content));
         $response = $client->getResponse();
@@ -91,7 +91,7 @@ class ProfileControllerTest extends WebTestCase
         $client = static::createClient();
         $repository = $client->getContainer()->get(UserRepository::class);
         $user = $repository->findOneBy(['username' => AppFixtures::USER_USERNAME]);
-        $client->loginUser(new User($user->getId(), ['ROLE_USER']));
+        $client->loginUser(new User($user->getId(), ['users.self.update']));
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $entityManager = $client->getContainer()->get(EntityManagerInterface::class);

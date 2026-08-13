@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -78,6 +79,7 @@ final class UserController extends AbstractController
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
+    #[IsGranted('users.read')]
     public function getScopes(
         #[MapEntity(id: 'id')] User $user,
         Request $request,
@@ -141,6 +143,7 @@ final class UserController extends AbstractController
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
+    #[IsGranted('users.read')]
     public function fetch(#[MapEntity(id: 'id')] User $user): Response
     {
         return new JsonResponse([
@@ -179,6 +182,7 @@ final class UserController extends AbstractController
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
+    #[IsGranted('users.write')]
     public function create(): Response
     {
         $user = new User();
@@ -242,6 +246,7 @@ final class UserController extends AbstractController
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
+    #[IsGranted('users.write')]
     public function update(#[MapEntity(id: 'id')] User $user): Response
     {
         if ($user->getIsSystem()) {
@@ -285,6 +290,7 @@ final class UserController extends AbstractController
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
+    #[IsGranted('users.delete')]
     public function delete(#[MapEntity(id: 'id')] User $user): Response
     {
         if ($user->getIsSystem()) {
@@ -317,6 +323,7 @@ final class UserController extends AbstractController
             new OA\Response(response: 400, description: 'Invalid credentials')
         ]
     )]
+    #[IsGranted('users.auth')]
     public function auth(): Response
     {
         $authRequest = new AuthUserRequest();

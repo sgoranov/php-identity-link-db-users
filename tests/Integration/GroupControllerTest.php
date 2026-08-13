@@ -15,7 +15,7 @@ class GroupControllerTest extends WebTestCase
     public function testCreateGroupWithMissingBody(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -28,7 +28,7 @@ class GroupControllerTest extends WebTestCase
     public function testCreateGroupWithEmptyName(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -47,7 +47,7 @@ class GroupControllerTest extends WebTestCase
     public function testCreateGroup(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -67,7 +67,7 @@ class GroupControllerTest extends WebTestCase
     public function testCreateGroupRejectsIsSystemThroughApi(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -85,7 +85,7 @@ class GroupControllerTest extends WebTestCase
     public function testUpdateGroupWithInvalidUuid()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -104,7 +104,7 @@ class GroupControllerTest extends WebTestCase
     public function testUpdateGroupWithInvalidName()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -126,7 +126,7 @@ class GroupControllerTest extends WebTestCase
     public function testUpdateGroupSuccessfully()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -151,7 +151,7 @@ class GroupControllerTest extends WebTestCase
     public function testUpdateGroupRejectsIsSystemThroughApi()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -174,7 +174,7 @@ class GroupControllerTest extends WebTestCase
     public function testUpdateSystemGroupIsForbidden()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -200,7 +200,7 @@ class GroupControllerTest extends WebTestCase
     public function testDeleteGroupWithMissingUuid()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -215,7 +215,7 @@ class GroupControllerTest extends WebTestCase
     public function testDeleteGroupSuccessfully()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -233,7 +233,7 @@ class GroupControllerTest extends WebTestCase
     public function testDeleteSystemGroupIsForbidden()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -259,7 +259,7 @@ class GroupControllerTest extends WebTestCase
     public function testFetchSystemGroupExposesIsSystem()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 

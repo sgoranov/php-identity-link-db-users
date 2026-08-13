@@ -225,7 +225,7 @@ final class GroupScopeControllerTest extends WebTestCase
 
     private function loginAdmin(\Symfony\Bundle\FrameworkBundle\KernelBrowser $client): void
     {
-        $client->loginUser(new User('test', ['ROLE_ADMIN']));
+        $client->loginUser(new User('test', ['users.groups.read', 'users.groups.write', 'users.groups.delete']));
     }
 
     private function persistScope(
