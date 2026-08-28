@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use OpenApi\Attributes as OA;
 
@@ -62,6 +63,7 @@ final class GroupController extends AbstractController
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
+    #[IsGranted('users.groups.read')]
     public function fetch(#[MapEntity(id: 'id')] Group $group): Response
     {
         return new JsonResponse([
@@ -100,6 +102,7 @@ final class GroupController extends AbstractController
             new OA\Response(response: 400, description: 'Invalid input')
         ]
     )]
+    #[IsGranted('users.groups.write')]
     public function create(): Response
     {
         $group = new Group();
@@ -157,6 +160,7 @@ final class GroupController extends AbstractController
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
+    #[IsGranted('users.groups.write')]
     public function update(#[MapEntity(id: 'id')] Group $group): Response
     {
         if ($group->getIsSystem()) {
@@ -197,6 +201,7 @@ final class GroupController extends AbstractController
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
+    #[IsGranted('users.groups.delete')]
     public function delete(#[MapEntity(id: 'id')] Group $group): Response
     {
         if ($group->getIsSystem()) {

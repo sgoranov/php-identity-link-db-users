@@ -13,7 +13,7 @@ class QueryControllerTest extends WebTestCase
     public function testQueryWithLimitAsString()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.query']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -32,7 +32,7 @@ class QueryControllerTest extends WebTestCase
     public function testQueryWithNegativeLimit()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.query']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -51,7 +51,7 @@ class QueryControllerTest extends WebTestCase
     public function testQueryWithNegativeOffset()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.query']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -70,7 +70,7 @@ class QueryControllerTest extends WebTestCase
     public function testQuerySuccessfully()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.query']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 

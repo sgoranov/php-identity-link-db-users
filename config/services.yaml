@@ -23,11 +23,11 @@ services:
     sgoranov\IdentityLinkShared\:
         resource: '../vendor/sgoranov/identity-link-shared/src/*'
 
-    sgoranov\IdentityLinkShared\Security\AccessTokenHandler:
-        calls:
-            - method: setUri
-              arguments:
-                  - '%env(JWT_JWKS_URI)%'
+    sgoranov\IdentityLinkShared\Security\AccessTokenHandlerConfiguration:
+        arguments:
+            $issuer: '%env(JWT_URL)%'
+            $audience: '%env(JWT_URL)%'
+            $jwksUri: '%env(JWT_JWKS_URI)%'
 
     sgoranov\IdentityLinkShared\Api\DTO\AbstractQueryRequest:
         alias: App\Api\DTO\Query\QueryRequest
@@ -51,6 +51,11 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    app.security.scope_voter:
+        class: Symfony\Component\Security\Core\Authorization\Voter\RoleVoter
+        arguments: ['users.']
+        tags: ['security.voter']
 
     sgoranov\IdentityLinkShared\EventListener\RequestResponseLogger:
         arguments:

@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
+use App\Entity\GroupScope;
+use App\Repository\GroupRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
@@ -12,10 +14,57 @@ use Symfony\Component\Routing\RouterInterface;
 
 class UserControllerTest extends WebTestCase
 {
+    public function testGetScopesForAudience(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']));
+        $container = $client->getContainer();
+        $router = $container->get(RouterInterface::class);
+        $group = $container->get(GroupRepository::class)
+            ->findOneBy(['name' => AppFixtures::GROUP_NAME]);
+        $user = $container->get(UserRepository::class)
+            ->findOneBy(['username' => AppFixtures::USER_USERNAME]);
+
+        $groupScope = new GroupScope();
+        $groupScope->setGroup($group);
+        $groupScope->setAudience('https://example.com/orders');
+        $groupScope->setScope('orders:read');
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $entityManager->persist($groupScope);
+        $entityManager->flush();
+
+        $client->request('GET', $router->generate('api_v1_get_user_scopes', [
+            'id' => $user->getId(),
+            'audience' => 'https://example.com/orders',
+        ]));
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSame(
+            ['orders:read'],
+            json_decode($client->getResponse()->getContent(), true)['response']['scopes']
+        );
+    }
+
+    public function testGetScopesRejectsMissingAudience(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']));
+        $container = $client->getContainer();
+        $router = $container->get(RouterInterface::class);
+        $user = $container->get(UserRepository::class)
+            ->findOneBy(['username' => AppFixtures::USER_USERNAME]);
+
+        $client->request('GET', $router->generate('api_v1_get_user_scopes', [
+            'id' => $user->getId(),
+        ]));
+
+        $this->assertResponseStatusCodeSame(400);
+    }
+
     public function testCreateUserWithMissingBody(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -28,7 +77,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithEmptyUsername(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -52,7 +101,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithInvalidUsername(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -76,7 +125,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithExistingUsername(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -100,7 +149,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithExistingEmail(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -124,7 +173,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithWeakPassword(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -148,7 +197,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithMissingTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -171,7 +220,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithInvalidTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -195,7 +244,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithTwoFaEnabledTrue(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -217,7 +266,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithNullTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -243,7 +292,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithEmptyStringTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -269,7 +318,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithNumericTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -295,7 +344,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithArrayTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -321,7 +370,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserWithObjectTwoFaEnabled(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -348,7 +397,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserSuccessfully(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -373,7 +422,7 @@ class UserControllerTest extends WebTestCase
     public function testCreateUserRejectsIsSystemThroughApi(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -396,7 +445,7 @@ class UserControllerTest extends WebTestCase
     public function testUpdateUserWithInvalidUuid()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -415,7 +464,7 @@ class UserControllerTest extends WebTestCase
     public function testUpdateUserSuccessfully()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -440,7 +489,7 @@ class UserControllerTest extends WebTestCase
     public function testUpdateUserRejectsIsSystemThroughApi()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -463,7 +512,7 @@ class UserControllerTest extends WebTestCase
     public function testUpdateSystemUserIsForbidden()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -489,7 +538,7 @@ class UserControllerTest extends WebTestCase
     public function testDeleteUserSuccessfully()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -507,7 +556,7 @@ class UserControllerTest extends WebTestCase
     public function testDeleteSystemUserIsForbidden()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -533,7 +582,7 @@ class UserControllerTest extends WebTestCase
     public function testFetchUserSuccessfully()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -554,7 +603,7 @@ class UserControllerTest extends WebTestCase
     public function testFetchSystemUserExposesIsSystem()
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['users.read', 'users.write', 'users.delete', 'users.auth']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 

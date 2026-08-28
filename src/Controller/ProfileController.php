@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -61,6 +62,7 @@ final class ProfileController extends AbstractController
             new OA\Response(response: 404, description: 'Current user not found')
         ]
     )]
+    #[IsGranted('users.self.update')]
     public function update(): Response
     {
         $currentUser = $this->getUser();
